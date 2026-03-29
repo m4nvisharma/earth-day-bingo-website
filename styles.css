@@ -204,8 +204,8 @@ button:hover {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: repeat(5, minmax(0, 1fr));
   gap: 0.85rem;
-  height: calc(100vh - 200px);
-  min-height: 540px;
+  height: calc(100vh - 170px);
+  min-height: 600px;
 }
 
 .bingo-card {
@@ -222,7 +222,8 @@ button:hover {
 
 .bingo-card.checked {
   border-color: var(--moss);
-  box-shadow: 0 10px 18px rgba(186, 201, 163, 0.4);
+  background: linear-gradient(135deg, #eef6e5, #f8fbf2 70%);
+  box-shadow: 0 12px 20px rgba(186, 201, 163, 0.45);
 }
 
 .bingo-card .title {
@@ -265,10 +266,10 @@ button:hover {
   display: grid;
   place-items: center;
   background: rgba(31, 63, 43, 0.12);
-  color: var(--forest);
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%231f3f2b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M32 6 L18 24 H24 L14 38 H22 L12 52 H52 L42 38 H50 L40 24 H46 Z'/><rect x='28' y='52' width='8' height='10'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 20px 20px;
 }
 
 .file-label {
@@ -315,6 +316,26 @@ button:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: none;
     height: auto;
+  }
+}
+
+@media (max-width: 1300px) and (min-width: 901px) {
+  .app-body {
+    padding: 1.5rem 2rem 2.5rem;
+  }
+
+  .bingo-grid {
+    gap: 1rem;
+    height: calc(100vh - 140px);
+    min-height: 680px;
+  }
+
+  .bingo-card {
+    padding: 1.35rem;
+  }
+
+  .bingo-card .title {
+    font-size: 1rem;
   }
 }
 

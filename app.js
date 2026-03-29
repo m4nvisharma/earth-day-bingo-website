@@ -106,7 +106,7 @@ function renderGrid() {
       const pin = document.createElement("span");
       pin.className = "center-pin";
       pin.setAttribute("aria-hidden", "true");
-      pin.textContent = "TREE";
+      pin.textContent = "";
       card.appendChild(pin);
     }
 
