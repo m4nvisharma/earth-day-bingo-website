@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Earth Day Bingo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="app-body">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Earth Day Bingo</p>
+        <h1>Grow your impact</h1>
+        <p class="lede">Check off actions and add a photo proof for each tile.</p>
+      </div>
+      <div class="header-actions">
+        <button id="logoutBtn" class="ghost">Log out</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="summary-card">
+        <div>
+          <p class="label">Progress</p>
+          <h2 id="progressCount">0 / 25 complete</h2>
+          <p id="bingoStatus" class="status">No bingo yet. Keep going.</p>
+        </div>
+        <div class="legend">
+          <span class="legend-item">Checked</span>
+          <span class="legend-item">Photo added</span>
+        </div>
+      </section>
+
+      <section id="bingoGrid" class="bingo-grid"></section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

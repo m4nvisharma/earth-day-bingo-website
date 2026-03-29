@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS bingo_items (
+  id SERIAL PRIMARY KEY,
+  label TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_item_status (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  item_id INTEGER NOT NULL REFERENCES bingo_items(id) ON DELETE CASCADE,
+  checked BOOLEAN NOT NULL DEFAULT FALSE,
+  image_url TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, item_id)
+);
