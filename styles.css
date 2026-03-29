@@ -41,11 +41,16 @@ h1, h2 {
   margin-top: 0.5rem;
 }
 
-.login-body, .app-body {
+.login-body {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 2.5rem 1.5rem;
+}
+
+.app-body {
+  display: block;
+  padding: 2rem 2.5rem 2.5rem;
 }
 
 .auth-shell {
@@ -182,66 +187,25 @@ button:hover {
 
 .app-header {
   width: min(1200px, 100%);
+  margin: 0 auto 1.5rem;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .app-main {
   width: min(1200px, 100%);
-  display: grid;
-  gap: 2rem;
-}
-
-.summary-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--white);
-  padding: 1.75rem 2rem;
-  border-radius: 20px;
-  box-shadow: 0 16px 40px rgba(31, 63, 43, 0.14);
-}
-
-.label {
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  color: var(--sage);
-}
-
-.status {
-  margin-top: 0.4rem;
-  color: var(--clay);
-}
-
-.legend {
-  display: grid;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--sage);
-}
-
-.legend-item::before {
-  content: "";
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-right: 0.5rem;
-  background: var(--moss);
-}
-
-.legend-item:last-child::before {
-  background: var(--sun);
+  margin: 0 auto;
 }
 
 .bingo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 0.85rem;
+  height: calc(100vh - 200px);
+  min-height: 540px;
 }
 
 .bingo-card {
@@ -253,7 +217,7 @@ button:hover {
   gap: 0.75rem;
   position: relative;
   overflow: hidden;
-  min-height: 200px;
+  min-height: 0;
 }
 
 .bingo-card.checked {
@@ -282,7 +246,29 @@ button:hover {
   width: 100%;
   border-radius: 12px;
   object-fit: cover;
-  max-height: 140px;
+  max-height: 120px;
+}
+
+.center-tile {
+  border: 2px solid var(--sun);
+  box-shadow: inset 0 0 0 2px rgba(241, 197, 109, 0.35);
+  background: linear-gradient(135deg, #fff6df, #ffffff 65%);
+}
+
+.center-pin {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(31, 63, 43, 0.12);
+  color: var(--forest);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .file-label {
@@ -325,9 +311,19 @@ button:hover {
     align-items: flex-start;
   }
 
-  .summary-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+  .bingo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+    height: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-body {
+    padding: 1.5rem;
+  }
+
+  .bingo-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -59,12 +59,13 @@ function renderGrid() {
   grid.innerHTML = "";
   let completed = 0;
 
-  items.forEach((item) => {
+  items.forEach((item, index) => {
     const status = state.get(item.id) || { checked: false, imageUrl: null };
     if (status.checked) completed += 1;
 
     const card = document.createElement("article");
-    card.className = `bingo-card${status.checked ? " checked" : ""}`;
+    const isCenter = index === 12;
+    card.className = `bingo-card${status.checked ? " checked" : ""}${isCenter ? " center-tile" : ""}`;
 
     const title = document.createElement("p");
     title.className = "title";
@@ -101,6 +102,14 @@ function renderGrid() {
 
     card.append(title, controls);
 
+    if (isCenter) {
+      const pin = document.createElement("span");
+      pin.className = "center-pin";
+      pin.setAttribute("aria-hidden", "true");
+      pin.textContent = "TREE";
+      card.appendChild(pin);
+    }
+
     if (status.imageUrl) {
       const img = document.createElement("img");
       img.src = status.imageUrl.startsWith("http") ? status.imageUrl : `${API_BASE}${status.imageUrl}`;
@@ -111,8 +120,12 @@ function renderGrid() {
     grid.appendChild(card);
   });
 
-  progressCount.textContent = `${completed} / ${items.length} complete`;
-  bingoStatus.textContent = computeBingo() ? "Bingo achieved!" : "No bingo yet. Keep going.";
+  if (progressCount) {
+    progressCount.textContent = `${completed} / ${items.length} complete`;
+  }
+  if (bingoStatus) {
+    bingoStatus.textContent = computeBingo() ? "Bingo achieved!" : "No bingo yet. Keep going.";
+  }
 }
 
 async function loadData() {
