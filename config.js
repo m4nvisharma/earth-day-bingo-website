@@ -1,1 +1,1 @@
-window.API_BASE = "https://your-backend.onrender.com";
+window.API_BASE = "https://earth-day-bingo-website-backend.onrender.com";
