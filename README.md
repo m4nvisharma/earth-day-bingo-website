@@ -5,7 +5,7 @@ Full-stack Earth Day Bingo with real accounts, persistent storage, and per-item 
 ## Architecture
 - Frontend: static HTML/CSS/JS hosted on GitHub Pages (repo root).
 - Backend: Node/Express on Render (or similar) with Postgres.
-- Image storage: S3-compatible object storage (recommended) with a local disk fallback for dev.
+- Image storage: Supabase Storage or S3-compatible object storage with a local disk fallback for dev.
 
 ## Backend Setup
 1. Create a Postgres database (Render or any provider).
@@ -33,6 +33,7 @@ The server seeds the 25 bingo items on startup from [prompts/bingo_cards.txt](pr
 
 ## Notes
 - The local file upload fallback uses `/uploads` and is best for development only.
-- For production, configure the S3-compatible environment variables in `backend/.env`.
+- For production, configure Supabase Storage (recommended) or S3-compatible environment variables in `backend/.env`.
 - Passwords are hashed with bcrypt and JWT tokens are stored in the browser.
 - `MAX_UPLOAD_MB` controls image upload size; set it in `backend/.env` if you need a different limit.
+ - `IMAGE_MAX_WIDTH`, `IMAGE_QUALITY`, and `IMAGE_FORMAT` control server-side compression.
