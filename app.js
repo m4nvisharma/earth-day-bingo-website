@@ -50,6 +50,8 @@ function computeBingo() {
   }
 
   lines.push(Array.from({ length: size }, (_, i) => checked[i * size + i]));
+  const userGreeting = document.getElementById("userGreeting");
+  const displayName = localStorage.getItem("displayName");
   lines.push(Array.from({ length: size }, (_, i) => checked[i * size + (size - i - 1)]));
 
   return lines.some((line) => line.every(Boolean));
@@ -166,6 +168,10 @@ async function uploadImage(itemId, file) {
   if (!response.ok) {
     throw new Error(data.error || "Upload failed");
   }
+
+    if (userGreeting && displayName) {
+      userGreeting.textContent = `Welcome, ${displayName}`;
+    }
 
   state.set(itemId, { ...state.get(itemId), imageUrl: data.imageUrl, checked: true });
   renderGrid();

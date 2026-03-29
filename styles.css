@@ -41,6 +41,13 @@ h1, h2 {
   margin-top: 0.5rem;
 }
 
+.user-greeting {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--forest);
+}
+
 .login-body {
   display: flex;
   justify-content: center;
@@ -204,13 +211,13 @@ button:hover {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: repeat(5, minmax(0, 1fr));
   gap: 0.85rem;
-  height: calc(100vh - 170px);
-  min-height: 600px;
+  height: calc(100vh - 150px);
+  min-height: 660px;
 }
 
 .bingo-card {
   background: var(--white);
-  padding: 1.2rem;
+  padding: 1.35rem;
   border-radius: 18px;
   border: 1px solid #e4e4e4;
   display: grid;
@@ -222,8 +229,8 @@ button:hover {
 
 .bingo-card.checked {
   border-color: var(--moss);
-  background: linear-gradient(135deg, #eef6e5, #f8fbf2 70%);
-  box-shadow: 0 12px 20px rgba(186, 201, 163, 0.45);
+  background: linear-gradient(135deg, #d7edc9, #e8f6df 70%);
+  box-shadow: 0 12px 22px rgba(130, 184, 120, 0.5);
 }
 
 .bingo-card .title {
@@ -326,12 +333,12 @@ button:hover {
 
   .bingo-grid {
     gap: 1rem;
-    height: calc(100vh - 140px);
-    min-height: 680px;
+    height: calc(100vh - 130px);
+    min-height: 720px;
   }
 
   .bingo-card {
-    padding: 1.35rem;
+    padding: 1.5rem;
   }
 
   .bingo-card .title {
