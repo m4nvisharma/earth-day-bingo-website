@@ -42,6 +42,6 @@ export async function storeImage({ buffer, contentType, key }) {
   const fileDir = path.dirname(filePath);
   if (!fs.existsSync(fileDir)) fs.mkdirSync(fileDir, { recursive: true });
   fs.writeFileSync(filePath, buffer);
-  const uploadDir = (process.env.UPLOAD_DIR || "uploads").replace(/^\/+/, "");
-  return `/${uploadDir}/${key}`;
+  const publicUploadDir = uploadDir.replace(/^\/+/, "");
+  return `/${publicUploadDir}/${key}`;
 }
