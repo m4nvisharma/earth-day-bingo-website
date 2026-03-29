@@ -3,7 +3,7 @@
 Full-stack Earth Day Bingo with real accounts, persistent storage, and per-item photo uploads.
 
 ## Architecture
-- Frontend: static HTML/CSS/JS hosted on GitHub Pages.
+- Frontend: static HTML/CSS/JS hosted on GitHub Pages (repo root).
 - Backend: Node/Express on Render (or similar) with Postgres.
 - Image storage: S3-compatible object storage (recommended) with a local disk fallback for dev.
 
@@ -23,12 +23,12 @@ Full-stack Earth Day Bingo with real accounts, persistent storage, and per-item 
 The server seeds the 25 bingo items on startup from [prompts/bingo_cards.txt](prompts/bingo_cards.txt).
 
 ## Frontend Setup
-1. Update `frontend/config.js` with your backend URL.
-2. Open `frontend/index.html` locally for development.
+1. Update `config.js` with your backend URL.
+2. Open `index.html` locally for development.
 
 ## GitHub Pages Deployment
 1. Push the repo to GitHub.
-2. In repository settings, enable GitHub Pages and set the source to `/frontend` (or move frontend files to root).
+2. In repository settings, enable GitHub Pages and set the source to `/` (root).
 3. Use the GitHub Pages URL as the `CORS_ORIGIN` value in `backend/.env` (comma-separate multiple origins if needed).
 
 ## Notes
