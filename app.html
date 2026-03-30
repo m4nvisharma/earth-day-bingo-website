@@ -73,6 +73,20 @@
       </section>
     </main>
 
+    <div id="adminDetail" class="admin-detail" aria-hidden="true">
+      <div class="admin-detail-card" role="dialog" aria-modal="true" aria-label="Participant details">
+        <div class="admin-detail-header">
+          <div>
+            <p class="eyebrow">Participant</p>
+            <h3 id="adminDetailName"></h3>
+            <p class="lede" id="adminDetailMeta"></p>
+          </div>
+          <button id="adminDetailClose" class="ghost">Close</button>
+        </div>
+        <section id="adminDetailGrid" class="admin-detail-grid"></section>
+      </div>
+    </div>
+
     <div id="celebration" class="celebration" aria-live="polite" aria-hidden="true">
       <div class="celebration-card" role="dialog" aria-modal="true" aria-label="Bingo celebration">
         <div class="earth-burst" aria-hidden="true">

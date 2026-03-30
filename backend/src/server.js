@@ -6,10 +6,11 @@ import express from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import multer from "multer";
-import { randomUUID } from "crypto";
+import { randomUUID, randomBytes, createHash } from "crypto";
 import { query, ensureSchema, ensureItems } from "./db.js";
 import { authMiddleware, signToken } from "./auth.js";
 import { storeImage } from "./storage.js";
+import { canSendEmail, configureEmail, sendEmail } from "./email.js";
 
 const app = express();
 
@@ -47,6 +48,8 @@ const uploadDir = (process.env.UPLOAD_DIR || "uploads").replace(/^\/+/, "");
 app.use(`/${uploadDir}`, express.static(uploadDir));
 
 const adminEmail = (process.env.ADMIN_EMAIL || "manviisharma01@gmail.com").toLowerCase();
+const publicBackendUrl = (process.env.PUBLIC_BACKEND_URL || "").replace(/\/$/, "");
+const publicFrontendUrl = (process.env.PUBLIC_FRONTEND_URL || "").replace(/\/$/, "");
 
 const fallbackBingoLabels = [
   "Pick up and collect at least 15 pieces of litter",
@@ -120,6 +123,93 @@ function countCompletedLines(checked, size = 5) {
   return lines.filter((line) => line.every(Boolean)).length;
 }
 
+function getCompletedLines(checked, size = 5) {
+  if (checked.length < size * size) return [];
+  const lines = [];
+  for (let r = 0; r < size; r++) {
+    lines.push({ key: `row-${r + 1}`, label: `Row ${r + 1}`, indexes: checked.slice(r * size, r * size + size) });
+  }
+  for (let c = 0; c < size; c++) {
+    lines.push({
+      key: `col-${c + 1}`,
+      label: `Column ${c + 1}`,
+      indexes: Array.from({ length: size }, (_, r) => checked[r * size + c])
+    });
+  }
+  lines.push({
+    key: "diag-main",
+    label: "Diagonal (top-left to bottom-right)",
+    indexes: Array.from({ length: size }, (_, i) => checked[i * size + i])
+  });
+  lines.push({
+    key: "diag-anti",
+    label: "Diagonal (top-right to bottom-left)",
+    indexes: Array.from({ length: size }, (_, i) => checked[i * size + (size - i - 1)])
+  });
+  return lines.filter((line) => line.indexes.every(Boolean));
+}
+
+function resolveImageUrl(imageUrl) {
+  if (!imageUrl) return "";
+  if (imageUrl.startsWith("http")) return imageUrl;
+  if (!publicBackendUrl) return imageUrl;
+  return `${publicBackendUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+}
+
+function buildBingoCardHtml(items, statusMap) {
+  const cards = items.map((item) => {
+    const row = statusMap.get(item.id);
+    const checked = row?.checked ? "Yes" : "No";
+    const imageUrl = resolveImageUrl(row?.image_url || "");
+    const imageHtml = imageUrl
+      ? `<div style="margin-top:8px"><img src="${imageUrl}" alt="Photo" style="max-width:120px;border-radius:10px;border:1px solid #dfe7dc" /></div>`
+      : "";
+    return `
+      <div style="border:1px solid #e3e9de;border-radius:12px;padding:10px;background:#ffffff">
+        <div style="font-weight:600;color:#1f3f2b">${item.label}</div>
+        <div style="font-size:12px;color:#6e8f7b;margin-top:4px">Completed: ${checked}</div>
+        ${imageHtml}
+      </div>
+    `;
+  });
+
+  return `
+    <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px">
+      ${cards.join("")}
+    </div>
+  `;
+}
+
+async function sendLineCompletionEmail({ user, line, items, statusMap }) {
+  if (!canSendEmail()) return;
+  const cardHtml = buildBingoCardHtml(items, statusMap);
+  const subject = `Earth Day Bingo: ${user.display_name} completed ${line.label}`;
+  const html = `
+    <div style="font-family:Arial, sans-serif;color:#1b1b1b">
+      <h2 style="color:#1f3f2b">Line completed!</h2>
+      <p><strong>${user.display_name}</strong> (${user.email}) completed <strong>${line.label}</strong>.</p>
+      <h3 style="margin-top:24px;color:#1f3f2b">Bingo card + photos</h3>
+      ${cardHtml}
+    </div>
+  `;
+  const text = `${user.display_name} (${user.email}) completed ${line.label}.`;
+
+  await sendEmail({
+    to: adminEmail,
+    subject,
+    html,
+    text
+  });
+}
+
+async function trySendLineCompletionEmail(payload) {
+  try {
+    await sendLineCompletionEmail(payload);
+  } catch (error) {
+    console.warn("Line completion email failed", error.message || error);
+  }
+}
+
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
 app.post("/api/auth/signup", async (req, res) => {
@@ -163,6 +253,74 @@ app.post("/api/auth/login", async (req, res) => {
   return res.json({ token, user: { id: user.id, email, displayName: user.display_name } });
 });
 
+app.post("/api/auth/forgot-password", async (req, res) => {
+  const { email } = req.body || {};
+  if (!email) return res.status(400).json({ error: "Missing email" });
+
+  const { rows } = await query("SELECT id, email, display_name FROM users WHERE email = $1", [email]);
+  if (rows.length === 0) {
+    return res.json({ ok: true });
+  }
+
+  const user = rows[0];
+  const rawToken = randomBytes(32).toString("hex");
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+  const resetId = randomUUID();
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 30);
+
+  await query(
+    `INSERT INTO password_resets (id, user_id, token_hash, expires_at)
+     VALUES ($1, $2, $3, $4)` ,
+    [resetId, user.id, tokenHash, expiresAt]
+  );
+
+  if (canSendEmail() && publicFrontendUrl) {
+    const resetLink = `${publicFrontendUrl}/reset.html?token=${rawToken}`;
+    const html = `
+      <div style="font-family:Arial, sans-serif;color:#1b1b1b">
+        <h2 style="color:#1f3f2b">Reset your password</h2>
+        <p>Hi ${user.display_name},</p>
+        <p>Use the link below to reset your password. This link expires in 30 minutes.</p>
+        <p><a href="${resetLink}">${resetLink}</a></p>
+      </div>
+    `;
+    await sendEmail({
+      to: user.email,
+      subject: "Reset your Earth Day Bingo password",
+      html,
+      text: `Reset your password: ${resetLink}`
+    });
+  }
+
+  return res.json({ ok: true });
+});
+
+app.post("/api/auth/reset-password", async (req, res) => {
+  const { token, password } = req.body || {};
+  if (!token || !password) {
+    return res.status(400).json({ error: "Missing token or password" });
+  }
+
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const { rows } = await query(
+    `SELECT id, user_id, expires_at, used_at FROM password_resets WHERE token_hash = $1`,
+    [tokenHash]
+  );
+  if (rows.length === 0) return res.status(400).json({ error: "Invalid token" });
+
+  const reset = rows[0];
+  if (reset.used_at) return res.status(400).json({ error: "Token already used" });
+  if (new Date(reset.expires_at) < new Date()) {
+    return res.status(400).json({ error: "Token expired" });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  await query("UPDATE users SET password_hash = $1 WHERE id = $2", [passwordHash, reset.user_id]);
+  await query("UPDATE password_resets SET used_at = NOW() WHERE id = $1", [reset.id]);
+
+  return res.json({ ok: true });
+});
+
 app.get("/api/bingo/items", authMiddleware, async (req, res) => {
   const { rows } = await query("SELECT id, label FROM bingo_items ORDER BY id ASC");
   return res.json({ items: rows });
@@ -184,6 +342,14 @@ app.put("/api/bingo/state", authMiddleware, async (req, res) => {
     return res.status(400).json({ error: "Invalid payload" });
   }
 
+  const { rows: itemRows } = await query("SELECT id, label FROM bingo_items ORDER BY id ASC");
+  const { rows: currentRows } = await query(
+    "SELECT item_id, checked, image_url FROM user_item_status WHERE user_id = $1",
+    [userId]
+  );
+  const statusMap = new Map(currentRows.map((row) => [row.item_id, row]));
+  const beforeChecked = itemRows.map((item) => Boolean(statusMap.get(item.id)?.checked));
+
   await query(
     `INSERT INTO user_item_status (user_id, item_id, checked)
      VALUES ($1, $2, $3)
@@ -191,6 +357,26 @@ app.put("/api/bingo/state", authMiddleware, async (req, res) => {
      DO UPDATE SET checked = EXCLUDED.checked, updated_at = NOW()` ,
     [userId, itemId, checked]
   );
+
+  const nextStatusMap = new Map(statusMap);
+  nextStatusMap.set(itemId, {
+    ...(nextStatusMap.get(itemId) || { item_id: itemId }),
+    checked,
+    image_url: nextStatusMap.get(itemId)?.image_url || null
+  });
+  const afterChecked = itemRows.map((item) => Boolean(nextStatusMap.get(item.id)?.checked));
+
+  const beforeLines = getCompletedLines(beforeChecked);
+  const afterLines = getCompletedLines(afterChecked);
+  const newLines = afterLines.filter((line) => !beforeLines.some((prev) => prev.key === line.key));
+
+  if (newLines.length > 0) {
+    const { rows: userRows } = await query("SELECT id, email, display_name FROM users WHERE id = $1", [userId]);
+    const user = userRows[0];
+    for (const line of newLines) {
+      await trySendLineCompletionEmail({ user, line, items: itemRows, statusMap: nextStatusMap });
+    }
+  }
 
   return res.json({ ok: true });
 });
@@ -201,6 +387,14 @@ app.post("/api/bingo/item/:id/image", authMiddleware, upload.single("image"), as
   if (!req.file || Number.isNaN(itemId)) {
     return res.status(400).json({ error: "Missing file or item id" });
   }
+
+  const { rows: itemRows } = await query("SELECT id, label FROM bingo_items ORDER BY id ASC");
+  const { rows: currentRows } = await query(
+    "SELECT item_id, checked, image_url FROM user_item_status WHERE user_id = $1",
+    [userId]
+  );
+  const statusMap = new Map(currentRows.map((row) => [row.item_id, row]));
+  const beforeChecked = itemRows.map((item) => Boolean(statusMap.get(item.id)?.checked));
 
   const key = `${userId}/${itemId}-${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, "")}`;
   const imageUrl = await storeImage({
@@ -216,6 +410,25 @@ app.post("/api/bingo/item/:id/image", authMiddleware, upload.single("image"), as
      DO UPDATE SET image_url = EXCLUDED.image_url, checked = TRUE, updated_at = NOW()` ,
     [userId, itemId, imageUrl]
   );
+
+  const nextStatusMap = new Map(statusMap);
+  nextStatusMap.set(itemId, {
+    ...(nextStatusMap.get(itemId) || { item_id: itemId }),
+    checked: true,
+    image_url: imageUrl
+  });
+  const afterChecked = itemRows.map((item) => Boolean(nextStatusMap.get(item.id)?.checked));
+  const beforeLines = getCompletedLines(beforeChecked);
+  const afterLines = getCompletedLines(afterChecked);
+  const newLines = afterLines.filter((line) => !beforeLines.some((prev) => prev.key === line.key));
+
+  if (newLines.length > 0) {
+    const { rows: userRows } = await query("SELECT id, email, display_name FROM users WHERE id = $1", [userId]);
+    const user = userRows[0];
+    for (const line of newLines) {
+      await trySendLineCompletionEmail({ user, line, items: itemRows, statusMap: nextStatusMap });
+    }
+  }
 
   return res.json({ imageUrl });
 });
@@ -293,6 +506,25 @@ app.get("/api/admin/leaderboard", authMiddleware, async (req, res) => {
   return res.json({ users: ranked });
 });
 
+app.get("/api/admin/users/:id/board", authMiddleware, async (req, res) => {
+  const requesterEmail = (req.user?.email || "").toLowerCase();
+  if (requesterEmail !== adminEmail) {
+    return res.status(403).json({ error: "Not authorized" });
+  }
+
+  const userId = req.params.id;
+  const { rows: userRows } = await query("SELECT id, email, display_name FROM users WHERE id = $1", [userId]);
+  if (userRows.length === 0) return res.status(404).json({ error: "User not found" });
+
+  const { rows: items } = await query("SELECT id, label FROM bingo_items ORDER BY id ASC");
+  const { rows: state } = await query(
+    "SELECT item_id, checked, image_url FROM user_item_status WHERE user_id = $1",
+    [userId]
+  );
+
+  return res.json({ user: userRows[0], items, state });
+});
+
 app.use((err, req, res, next) => {
   if (err?.message === "INVALID_FILE_TYPE") {
     return res.status(400).json({ error: "Only image uploads are allowed" });
@@ -305,6 +537,7 @@ app.use((err, req, res, next) => {
 
 async function bootstrap() {
   await ensureSchema();
+  configureEmail();
   const labels = loadBingoLabels();
   await ensureItems(labels);
 

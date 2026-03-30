@@ -9,6 +9,7 @@
     "start": "node src/server.js"
   },
   "dependencies": {
+    "@sendgrid/mail": "^8.1.4",
     "@supabase/supabase-js": "^2.50.0",
     "aws-sdk": "^2.1482.0",
     "bcrypt": "^5.1.1",

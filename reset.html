@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset Password - Earth Day Bingo</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="login-body">
+    <main class="auth-shell">
+      <section class="auth-panel">
+        <div class="auth-header">
+          <p class="eyebrow">Earth Day Bingo</p>
+          <h1>Reset your password</h1>
+          <p class="lede">Choose a new password to get back to your bingo card.</p>
+        </div>
+
+        <form id="resetForm" class="auth-form">
+          <label>
+            New password
+            <input type="password" name="password" required minlength="8" />
+          </label>
+          <label>
+            Confirm password
+            <input type="password" name="confirmPassword" required minlength="8" />
+          </label>
+          <button type="submit" class="primary">Update password</button>
+          <a class="ghost reset-link" href="index.html">Back to login</a>
+        </form>
+
+        <p id="resetMessage" class="auth-message" aria-live="polite"></p>
+      </section>
+
+      <section class="auth-art">
+        <div class="sun-glow"></div>
+        <div class="card-preview">
+          <div class="card-row">
+            <span>Plant-based day</span>
+            <span>Reuse containers</span>
+          </div>
+          <div class="card-row">
+            <span>Pick up litter</span>
+            <span>Bike 15 minutes</span>
+          </div>
+        </div>
+        <p class="auth-quote">"Small acts. Shared planet. Big change."</p>
+      </section>
+    </main>
+
+    <script src="config.js?v=20260329"></script>
+    <script src="reset.js"></script>
+  </body>
+</html>

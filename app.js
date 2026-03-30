@@ -21,6 +21,11 @@ const celebration = document.getElementById("celebration");
 const celebrationTitle = document.getElementById("celebrationTitle");
 const celebrationMessage = document.getElementById("celebrationMessage");
 const closeCelebration = document.getElementById("closeCelebration");
+const adminDetail = document.getElementById("adminDetail");
+const adminDetailClose = document.getElementById("adminDetailClose");
+const adminDetailName = document.getElementById("adminDetailName");
+const adminDetailMeta = document.getElementById("adminDetailMeta");
+const adminDetailGrid = document.getElementById("adminDetailGrid");
 
 let items = [];
 let state = new Map();
@@ -231,6 +236,7 @@ async function loadLeaderboard() {
   adminTableBody.innerHTML = "";
   users.forEach((user, index) => {
     const row = document.createElement("tr");
+    row.dataset.userId = user.id;
     row.innerHTML = `
       <td>${index + 1}</td>
       <td>${user.displayName}</td>
@@ -239,8 +245,60 @@ async function loadLeaderboard() {
       <td>${user.tilesCompleted}</td>
       <td>${user.photoTiles}</td>
     `;
+    row.addEventListener("click", () => {
+      loadAdminDetail(user.id).catch((error) => showToast(error.message));
+    });
     adminTableBody.appendChild(row);
   });
+}
+
+function openAdminDetail() {
+  if (!adminDetail) return;
+  adminDetail.classList.add("show");
+  adminDetail.setAttribute("aria-hidden", "false");
+}
+
+function closeAdminDetail() {
+  if (!adminDetail) return;
+  adminDetail.classList.remove("show");
+  adminDetail.setAttribute("aria-hidden", "true");
+}
+
+function renderAdminDetail({ user, items, state }) {
+  if (!adminDetailGrid || !adminDetailName || !adminDetailMeta) return;
+  const statusMap = new Map(state.map((entry) => [entry.item_id, entry]));
+  adminDetailName.textContent = user.display_name;
+  adminDetailMeta.textContent = user.email;
+  adminDetailGrid.innerHTML = "";
+
+  items.forEach((item, index) => {
+    const status = statusMap.get(item.id) || { checked: false, image_url: null };
+    const card = document.createElement("article");
+    const isCenter = index === 12;
+    card.className = `bingo-card${status.checked ? " checked" : ""}${isCenter ? " center-tile" : ""}`;
+
+    const title = document.createElement("p");
+    title.className = "title";
+    title.textContent = item.label;
+    card.appendChild(title);
+
+    if (status.image_url) {
+      const img = document.createElement("img");
+      img.src = status.image_url.startsWith("http") ? status.image_url : `${API_BASE}${status.image_url}`;
+      img.alt = "Uploaded proof";
+      card.appendChild(img);
+    }
+
+    adminDetailGrid.appendChild(card);
+  });
+
+  openAdminDetail();
+}
+
+async function loadAdminDetail(userId) {
+  if (!isAdmin) return;
+  const data = await apiFetch(`/api/admin/users/${userId}/board`);
+  renderAdminDetail(data);
 }
 
 logoutBtn.addEventListener("click", () => {
@@ -255,6 +313,10 @@ if (closeCelebration) {
     celebration.classList.remove("show");
     celebration.setAttribute("aria-hidden", "true");
   });
+}
+
+if (adminDetailClose) {
+  adminDetailClose.addEventListener("click", closeAdminDetail);
 }
 
 if (isAdmin && adminPanel) {

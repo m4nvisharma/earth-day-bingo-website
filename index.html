@@ -32,6 +32,16 @@
             <input type="password" name="password" required minlength="8" />
           </label>
           <button type="submit" class="primary">Log in</button>
+          <button type="button" id="forgotPasswordToggle" class="ghost">Forgot password?</button>
+        </form>
+
+        <form id="forgotPasswordForm" class="auth-form" hidden>
+          <label>
+            Email for reset link
+            <input type="email" name="email" required placeholder="you@example.com" />
+          </label>
+          <button type="submit" class="primary">Send reset link</button>
+          <button type="button" id="forgotPasswordCancel" class="ghost">Back to login</button>
         </form>
 
         <div class="divider"><span>New here?</span></div>
