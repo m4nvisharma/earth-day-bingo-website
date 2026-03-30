@@ -46,6 +46,8 @@ app.use(express.json({ limit: "1mb" }));
 const uploadDir = (process.env.UPLOAD_DIR || "uploads").replace(/^\/+/, "");
 app.use(`/${uploadDir}`, express.static(uploadDir));
 
+const adminEmail = (process.env.ADMIN_EMAIL || "manviisharma01@gmail.com").toLowerCase();
+
 const fallbackBingoLabels = [
   "Pick up and collect at least 15 pieces of litter",
   "Sort a day's waste into recycling, compost, and garbage correctly",
@@ -102,6 +104,20 @@ function loadBingoLabels() {
     console.warn("Unable to read bingo_cards.txt; using fallback labels.");
     return fallbackBingoLabels;
   }
+}
+
+function countCompletedLines(checked, size = 5) {
+  if (checked.length < size * size) return 0;
+  const lines = [];
+  for (let r = 0; r < size; r++) {
+    lines.push(checked.slice(r * size, r * size + size));
+  }
+  for (let c = 0; c < size; c++) {
+    lines.push(Array.from({ length: size }, (_, r) => checked[r * size + c]));
+  }
+  lines.push(Array.from({ length: size }, (_, i) => checked[i * size + i]));
+  lines.push(Array.from({ length: size }, (_, i) => checked[i * size + (size - i - 1)]));
+  return lines.filter((line) => line.every(Boolean)).length;
 }
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
@@ -220,6 +236,61 @@ app.delete("/api/bingo/item/:id/image", authMiddleware, async (req, res) => {
   );
 
   return res.json({ ok: true });
+});
+
+app.get("/api/admin/leaderboard", authMiddleware, async (req, res) => {
+  const requesterEmail = (req.user?.email || "").toLowerCase();
+  if (requesterEmail !== adminEmail) {
+    return res.status(403).json({ error: "Not authorized" });
+  }
+
+  const { rows: itemRows } = await query("SELECT id FROM bingo_items ORDER BY id ASC");
+  const itemIds = itemRows.map((row) => row.id);
+
+  const { rows: users } = await query("SELECT id, email, display_name FROM users");
+  const { rows: statuses } = await query(
+    "SELECT user_id, item_id, checked, image_url FROM user_item_status"
+  );
+
+  const statusByUser = new Map();
+  users.forEach((user) => {
+    statusByUser.set(user.id, new Map());
+  });
+  statuses.forEach((row) => {
+    if (!statusByUser.has(row.user_id)) {
+      statusByUser.set(row.user_id, new Map());
+    }
+    statusByUser.get(row.user_id).set(row.item_id, row);
+  });
+
+  const ranked = users.map((user) => {
+    const statusMap = statusByUser.get(user.id) || new Map();
+    const checked = itemIds.map((itemId) => Boolean(statusMap.get(itemId)?.checked));
+    const tilesCompleted = checked.filter(Boolean).length;
+    const photoTiles = itemIds.reduce((count, itemId) => {
+      const row = statusMap.get(itemId);
+      return count + (row?.checked && row?.image_url ? 1 : 0);
+    }, 0);
+    const linesCompleted = countCompletedLines(checked, 5);
+
+    return {
+      id: user.id,
+      email: user.email,
+      displayName: user.display_name,
+      linesCompleted,
+      tilesCompleted,
+      photoTiles
+    };
+  });
+
+  ranked.sort((a, b) => {
+    if (b.linesCompleted !== a.linesCompleted) return b.linesCompleted - a.linesCompleted;
+    if (b.tilesCompleted !== a.tilesCompleted) return b.tilesCompleted - a.tilesCompleted;
+    if (b.photoTiles !== a.photoTiles) return b.photoTiles - a.photoTiles;
+    return a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" });
+  });
+
+  return res.json({ users: ranked });
 });
 
 app.use((err, req, res, next) => {

@@ -28,7 +28,80 @@
 
     <main class="app-main">
       <section id="bingoGrid" class="bingo-grid"></section>
+      <section id="adminPanel" class="admin-panel" hidden>
+        <div class="admin-header">
+          <div>
+            <p class="eyebrow">Admin view</p>
+            <h2>Leaderboard and progress</h2>
+            <p class="lede">Ranked by lines completed, then tiles, then photo tiles, then name.</p>
+          </div>
+          <button id="refreshAdminBtn" class="primary">Refresh</button>
+        </div>
+        <div class="admin-stats">
+          <div class="stat-card">
+            <p class="stat-label">Participants</p>
+            <p class="stat-value" id="adminUserCount">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Top score (lines)</p>
+            <p class="stat-value" id="adminTopLines">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Most tiles checked</p>
+            <p class="stat-value" id="adminTopTiles">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Most photo tiles</p>
+            <p class="stat-value" id="adminTopPhotos">0</p>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Lines</th>
+                <th>Tiles</th>
+                <th>Photo tiles</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody"></tbody>
+          </table>
+        </div>
+      </section>
     </main>
+
+    <div id="celebration" class="celebration" aria-live="polite" aria-hidden="true">
+      <div class="celebration-card" role="dialog" aria-modal="true" aria-label="Bingo celebration">
+        <div class="earth-burst" aria-hidden="true">
+          <span class="leaf leaf-1"></span>
+          <span class="leaf leaf-2"></span>
+          <span class="leaf leaf-3"></span>
+          <span class="leaf leaf-4"></span>
+        </div>
+        <div class="earth-icon" aria-hidden="true">
+          <svg viewBox="0 0 120 120" role="presentation">
+            <defs>
+              <linearGradient id="ocean" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stop-color="#6db7c6" />
+                <stop offset="100%" stop-color="#2f6d7a" />
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="52" fill="url(#ocean)" />
+            <path d="M32 40c6-8 18-10 24-4 6 5 10 2 16 0 6-2 16 1 18 10-8 6-16 10-20 18-6 12-18 16-34 10-8-3-10-20-4-34z" fill="#7fc68a" />
+            <path d="M50 78c6 2 12 0 18-4 8-6 14-4 18 2-6 10-16 16-28 18-8 2-14-2-8-16z" fill="#5da870" />
+          </svg>
+        </div>
+        <div>
+          <p class="eyebrow">Earth cheer</p>
+          <h2 id="celebrationTitle">Line complete!</h2>
+          <p class="lede" id="celebrationMessage">You completed a row, column, or diagonal.</p>
+        </div>
+        <button id="closeCelebration" class="ghost">Keep going</button>
+      </div>
+    </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 

@@ -22,6 +22,7 @@ async function handleAuth(endpoint, payload) {
 
   localStorage.setItem("token", data.token);
   localStorage.setItem("displayName", data.user.displayName);
+  localStorage.setItem("userEmail", data.user.email);
   window.location.href = "app.html";
 }
 

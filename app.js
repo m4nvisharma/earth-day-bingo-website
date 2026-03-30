@@ -10,9 +10,26 @@ const progressCount = document.getElementById("progressCount");
 const bingoStatus = document.getElementById("bingoStatus");
 const logoutBtn = document.getElementById("logoutBtn");
 const toast = document.getElementById("toast");
+const adminPanel = document.getElementById("adminPanel");
+const adminTableBody = document.getElementById("adminTableBody");
+const adminUserCount = document.getElementById("adminUserCount");
+const adminTopLines = document.getElementById("adminTopLines");
+const adminTopTiles = document.getElementById("adminTopTiles");
+const adminTopPhotos = document.getElementById("adminTopPhotos");
+const refreshAdminBtn = document.getElementById("refreshAdminBtn");
+const celebration = document.getElementById("celebration");
+const celebrationTitle = document.getElementById("celebrationTitle");
+const celebrationMessage = document.getElementById("celebrationMessage");
+const closeCelebration = document.getElementById("closeCelebration");
 
 let items = [];
 let state = new Map();
+let lastLineCount = 0;
+let hasLoadedLines = false;
+
+const adminEmail = (window.ADMIN_EMAIL || "manviisharma01@gmail.com").toLowerCase();
+const userEmail = (localStorage.getItem("userEmail") || "").toLowerCase();
+const isAdmin = userEmail === adminEmail;
 
 function showToast(message) {
   toast.textContent = message;
@@ -36,7 +53,8 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
-function computeBingo() {
+function getLineCompletionCount() {
+  if (items.length < 25) return 0;
   const checked = items.map((item) => Boolean(state.get(item.id)?.checked));
   const size = 5;
   const lines = [];
@@ -50,12 +68,31 @@ function computeBingo() {
   }
 
   lines.push(Array.from({ length: size }, (_, i) => checked[i * size + i]));
-  const userGreeting = document.getElementById("userGreeting");
-  const displayName = localStorage.getItem("displayName");
-  const firstName = displayName ? displayName.trim().split(/\s+/)[0] : "";
   lines.push(Array.from({ length: size }, (_, i) => checked[i * size + (size - i - 1)]));
 
-  return lines.some((line) => line.every(Boolean));
+  return lines.filter((line) => line.every(Boolean)).length;
+}
+
+function updateGreeting() {
+  const userGreeting = document.getElementById("userGreeting");
+  if (!userGreeting) return;
+  const displayName = localStorage.getItem("displayName") || "";
+  const firstName = displayName.trim().split(/\s+/)[0] || "";
+  userGreeting.textContent = firstName ? `Welcome, ${firstName}` : "";
+}
+
+function showCelebration(newLines, totalLines) {
+  if (!celebration) return;
+  const lineLabel = newLines === 1 ? "line" : "lines";
+  celebrationTitle.textContent = `${newLines} ${lineLabel} completed!`;
+  celebrationMessage.textContent = `You now have ${totalLines} total completed ${totalLines === 1 ? "line" : "lines"}.`;
+  celebration.classList.add("show");
+  celebration.setAttribute("aria-hidden", "false");
+  window.clearTimeout(showCelebration._timer);
+  showCelebration._timer = window.setTimeout(() => {
+    celebration.classList.remove("show");
+    celebration.setAttribute("aria-hidden", "true");
+  }, 3600);
 }
 
 function renderGrid() {
@@ -126,9 +163,16 @@ function renderGrid() {
   if (progressCount) {
     progressCount.textContent = `${completed} / ${items.length} complete`;
   }
+  const lineCount = getLineCompletionCount();
   if (bingoStatus) {
-    bingoStatus.textContent = computeBingo() ? "Bingo achieved!" : "No bingo yet. Keep going.";
+    bingoStatus.textContent = lineCount > 0 ? "Bingo achieved!" : "No bingo yet. Keep going.";
   }
+
+  if (hasLoadedLines && lineCount > lastLineCount) {
+    showCelebration(lineCount - lastLineCount, lineCount);
+  }
+  lastLineCount = lineCount;
+  hasLoadedLines = true;
 }
 
 async function loadData() {
@@ -141,6 +185,7 @@ async function loadData() {
     imageUrl: entry.image_url
   }]));
 
+  updateGreeting();
   renderGrid();
 }
 
@@ -170,19 +215,55 @@ async function uploadImage(itemId, file) {
     throw new Error(data.error || "Upload failed");
   }
 
-    if (userGreeting && firstName) {
-      userGreeting.textContent = `Welcome, ${firstName}`;
-    }
-
   state.set(itemId, { ...state.get(itemId), imageUrl: data.imageUrl, checked: true });
   renderGrid();
+}
+
+async function loadLeaderboard() {
+  if (!isAdmin || !adminPanel) return;
+  const data = await apiFetch("/api/admin/leaderboard");
+  const users = data.users || [];
+  adminUserCount.textContent = users.length;
+  adminTopLines.textContent = users[0]?.linesCompleted ?? 0;
+  adminTopTiles.textContent = users[0]?.tilesCompleted ?? 0;
+  adminTopPhotos.textContent = users[0]?.photoTiles ?? 0;
+
+  adminTableBody.innerHTML = "";
+  users.forEach((user, index) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${user.displayName}</td>
+      <td>${user.email}</td>
+      <td>${user.linesCompleted}</td>
+      <td>${user.tilesCompleted}</td>
+      <td>${user.photoTiles}</td>
+    `;
+    adminTableBody.appendChild(row);
+  });
 }
 
 logoutBtn.addEventListener("click", () => {
   localStorage.removeItem("token");
   localStorage.removeItem("displayName");
+  localStorage.removeItem("userEmail");
   window.location.href = "index.html";
 });
+
+if (closeCelebration) {
+  closeCelebration.addEventListener("click", () => {
+    celebration.classList.remove("show");
+    celebration.setAttribute("aria-hidden", "true");
+  });
+}
+
+if (isAdmin && adminPanel) {
+  adminPanel.hidden = false;
+  refreshAdminBtn?.addEventListener("click", () => {
+    loadLeaderboard().catch((error) => showToast(error.message));
+  });
+  loadLeaderboard().catch((error) => showToast(error.message));
+}
 
 loadData().catch((error) => {
   showToast(error.message);

@@ -313,6 +313,207 @@ button:hover {
   transform: translateY(0);
 }
 
+.admin-panel {
+  margin-top: 2.5rem;
+  padding: 2rem;
+  border-radius: 24px;
+  background: var(--white);
+  box-shadow: 0 20px 45px rgba(31, 63, 43, 0.12);
+  display: grid;
+  gap: 1.75rem;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.5rem;
+}
+
+.admin-stats {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #f0f7ea, #ffffff 60%);
+  border-radius: 18px;
+  padding: 1rem 1.2rem;
+  border: 1px solid #e0eadf;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--sage);
+  margin-bottom: 0.35rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--forest);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 0.8rem 0.6rem;
+  border-bottom: 1px solid #e6efe3;
+  font-size: 0.95rem;
+}
+
+.admin-table th {
+  color: var(--sage);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+}
+
+.admin-table tbody tr:hover {
+  background: #f3f8ee;
+}
+
+.celebration {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 36, 28, 0.55);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  padding: 1.5rem;
+  z-index: 20;
+}
+
+.celebration.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.celebration-card {
+  background: radial-gradient(circle at top, #f4f8ef, #ffffff 65%);
+  border-radius: 26px;
+  padding: 2rem;
+  width: min(520px, 100%);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+  display: grid;
+  gap: 1.2rem;
+  position: relative;
+  overflow: hidden;
+  animation: celebration-rise 0.4s ease;
+}
+
+.earth-icon {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e6f3f4;
+  margin-bottom: 0.5rem;
+  animation: float-earth 3s ease-in-out infinite;
+}
+
+.earth-icon svg {
+  width: 100px;
+  height: 100px;
+}
+
+.earth-burst {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle at 20% 20%, rgba(241, 197, 109, 0.35), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(186, 201, 163, 0.45), transparent 55%),
+    radial-gradient(circle at 10% 90%, rgba(111, 164, 132, 0.25), transparent 60%);
+  z-index: 0;
+}
+
+.earth-burst .leaf {
+  position: absolute;
+  width: 14px;
+  height: 28px;
+  background: linear-gradient(180deg, #8ecb7c, #3f7a50);
+  border-radius: 14px 14px 14px 0;
+  opacity: 0.8;
+  animation: leaf-drift 3.5s ease-in-out infinite;
+}
+
+.leaf-1 {
+  top: 18%;
+  left: 12%;
+  transform: rotate(20deg);
+}
+
+.leaf-2 {
+  top: 10%;
+  right: 18%;
+  transform: rotate(-30deg);
+  animation-delay: 0.5s;
+}
+
+.leaf-3 {
+  bottom: 12%;
+  left: 20%;
+  transform: rotate(-10deg);
+  animation-delay: 1s;
+}
+
+.leaf-4 {
+  bottom: 18%;
+  right: 12%;
+  transform: rotate(35deg);
+  animation-delay: 1.5s;
+}
+
+.celebration-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes celebration-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes float-earth {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes leaf-drift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(10deg);
+  }
+  50% {
+    transform: translateY(10px) rotate(-12deg);
+  }
+}
+
 @media (max-width: 900px) {
   .app-header {
     flex-direction: column;
@@ -323,6 +524,11 @@ button:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: none;
     height: auto;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
@@ -353,5 +559,9 @@ button:hover {
 
   .bingo-grid {
     grid-template-columns: 1fr;
+  }
+
+  .celebration-card {
+    padding: 1.5rem;
   }
 }
