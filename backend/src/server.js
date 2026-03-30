@@ -204,9 +204,16 @@ async function sendLineCompletionEmail({ user, line, items, statusMap }) {
 
 async function trySendLineCompletionEmail(payload) {
   try {
+    if (!canSendEmail()) {
+      console.warn("Line completion email skipped: SendGrid not configured");
+      return;
+    }
     await sendLineCompletionEmail(payload);
   } catch (error) {
-    console.warn("Line completion email failed", error.message || error);
+    const detail = error?.response?.body?.errors
+      ? JSON.stringify(error.response.body.errors)
+      : error.message || error;
+    console.warn("Line completion email failed", detail);
   }
 }
 
@@ -274,23 +281,31 @@ app.post("/api/auth/forgot-password", async (req, res) => {
     [resetId, user.id, tokenHash, expiresAt]
   );
 
-  if (canSendEmail() && publicFrontendUrl) {
-    const resetLink = `${publicFrontendUrl}/reset.html?token=${rawToken}`;
-    const html = `
-      <div style="font-family:Arial, sans-serif;color:#1b1b1b">
-        <h2 style="color:#1f3f2b">Reset your password</h2>
-        <p>Hi ${user.display_name},</p>
-        <p>Use the link below to reset your password. This link expires in 30 minutes.</p>
-        <p><a href="${resetLink}">${resetLink}</a></p>
-      </div>
-    `;
-    await sendEmail({
-      to: user.email,
-      subject: "Reset your Earth Day Bingo password",
-      html,
-      text: `Reset your password: ${resetLink}`
-    });
+  if (!canSendEmail()) {
+    return res.status(500).json({ error: "Email is not configured" });
   }
+
+  const origin = typeof req.headers.origin === "string" ? req.headers.origin.replace(/\/$/, "") : "";
+  const frontendBase = publicFrontendUrl || origin;
+  if (!frontendBase) {
+    return res.status(500).json({ error: "Missing PUBLIC_FRONTEND_URL" });
+  }
+
+  const resetLink = `${frontendBase}/reset.html?token=${rawToken}`;
+  const html = `
+    <div style="font-family:Arial, sans-serif;color:#1b1b1b">
+      <h2 style="color:#1f3f2b">Reset your password</h2>
+      <p>Hi ${user.display_name},</p>
+      <p>Use the link below to reset your password. This link expires in 30 minutes.</p>
+      <p><a href="${resetLink}">${resetLink}</a></p>
+    </div>
+  `;
+  await sendEmail({
+    to: user.email,
+    subject: "Reset your Earth Day Bingo password",
+    html,
+    text: `Reset your password: ${resetLink}`
+  });
 
   return res.json({ ok: true });
 });
