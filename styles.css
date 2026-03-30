@@ -15,6 +15,10 @@
   padding: 0;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   font-family: "Work Sans", sans-serif;
   color: var(--ink);

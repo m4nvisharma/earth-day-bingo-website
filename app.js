@@ -325,6 +325,8 @@ if (isAdmin && adminPanel) {
     loadLeaderboard().catch((error) => showToast(error.message));
   });
   loadLeaderboard().catch((error) => showToast(error.message));
+} else if (adminPanel) {
+  adminPanel.hidden = true;
 }
 
 loadData().catch((error) => {

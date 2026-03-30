@@ -7,6 +7,10 @@ const forgotPasswordToggle = document.getElementById("forgotPasswordToggle");
 const forgotPasswordForm = document.getElementById("forgotPasswordForm");
 const forgotPasswordCancel = document.getElementById("forgotPasswordCancel");
 
+if (forgotPasswordForm) {
+  forgotPasswordForm.hidden = true;
+}
+
 function setMessage(text) {
   authMessage.textContent = text;
 }
