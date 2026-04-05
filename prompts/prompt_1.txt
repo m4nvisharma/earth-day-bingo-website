@@ -1,2 +1,0 @@
-PLAN mode:
-use the bing_cards.txt as the list of bingo cards. Use initial_chat.txt to help you figure out what i'm looking for.  I want to use github, directly linked from vs code here and publish through pages. 

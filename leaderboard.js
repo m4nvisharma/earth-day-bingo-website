@@ -10,10 +10,17 @@ const leaderboardMessage = document.getElementById("leaderboardMessage");
 const refreshLeaderboard = document.getElementById("refreshLeaderboard");
 let avatarCatalog = null;
 
-function applyTheme(theme) {
+function applyTheme(theme, options = {}) {
   const mode = theme === "dark" ? "dark" : "light";
+  if (typeof window.applyTheme === "function") {
+    window.applyTheme(mode, options);
+    return mode;
+  }
   document.body.classList.toggle("theme-dark", mode === "dark");
-  localStorage.setItem("theme", mode);
+  if (options.persist !== false) {
+    localStorage.setItem("theme", mode);
+  }
+  return mode;
 }
 
 function setMessage(text) {
@@ -71,7 +78,9 @@ function renderLeaderboard(users, currentUserId) {
 async function loadLeaderboard() {
   setMessage("");
   const me = await apiFetch("/api/user/me");
-  if (me?.themePreference) {
+  const storedTheme = localStorage.getItem("theme");
+  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
+  if (!hasStoredTheme && me?.themePreference) {
     applyTheme(me.themePreference);
   }
   if (!avatarCatalog) {

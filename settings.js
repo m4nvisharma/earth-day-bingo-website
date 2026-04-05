@@ -21,13 +21,20 @@ function setMessage(text) {
   if (settingsMessage) settingsMessage.textContent = text;
 }
 
-function applyTheme(theme) {
+function applyTheme(theme, options = {}) {
   const mode = theme === "dark" ? "dark" : "light";
-  document.body.classList.toggle("theme-dark", mode === "dark");
-  localStorage.setItem("theme", mode);
+  if (typeof window.applyTheme === "function") {
+    window.applyTheme(mode, options);
+  } else {
+    document.body.classList.toggle("theme-dark", mode === "dark");
+    if (options.persist !== false) {
+      localStorage.setItem("theme", mode);
+    }
+  }
   if (darkModeToggle) {
     darkModeToggle.checked = mode === "dark";
   }
+  return mode;
 }
 
 async function apiFetch(path, options = {}) {
@@ -130,7 +137,11 @@ async function loadSettings() {
   renderOptions(avatarBases, avatarData.bases, "base");
   renderOptions(avatarProps, avatarData.props, "overlay");
   renderPreview();
-  applyTheme(profile.themePreference);
+
+  const storedTheme = localStorage.getItem("theme");
+  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
+  const themePreference = hasStoredTheme ? storedTheme : profile.themePreference;
+  applyTheme(themePreference, { persist: !hasStoredTheme });
 }
 
 saveSettings?.addEventListener("click", async () => {

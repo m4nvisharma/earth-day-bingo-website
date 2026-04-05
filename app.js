@@ -45,10 +45,17 @@ let lastLineCount = 0;
 let hasLoadedLines = false;
 let consentReadyAt = 0;
 
-function applyTheme(theme) {
+function applyTheme(theme, options = {}) {
   const mode = theme === "dark" ? "dark" : "light";
+  if (typeof window.applyTheme === "function") {
+    window.applyTheme(mode, options);
+    return mode;
+  }
   document.body.classList.toggle("theme-dark", mode === "dark");
-  localStorage.setItem("theme", mode);
+  if (options.persist !== false) {
+    localStorage.setItem("theme", mode);
+  }
+  return mode;
 }
 
 const adminEmail = (window.ADMIN_EMAIL || "manviisharma01@gmail.com").toLowerCase();
@@ -335,7 +342,9 @@ function startConsentCountdown(seconds = 5) {
 async function ensureConsent() {
   if (!consentModal) return;
   const me = await apiFetch("/api/user/me");
-  if (me?.themePreference) {
+  const storedTheme = localStorage.getItem("theme");
+  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
+  if (!hasStoredTheme && me?.themePreference) {
     applyTheme(me.themePreference);
   }
   if (me?.certificateEarnedAt) {
