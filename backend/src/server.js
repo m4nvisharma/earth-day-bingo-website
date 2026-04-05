@@ -47,7 +47,7 @@ app.use(express.json({ limit: "1mb" }));
 const uploadDir = (process.env.UPLOAD_DIR || "uploads").replace(/^\/+/, "");
 app.use(`/${uploadDir}`, express.static(uploadDir));
 
-const adminEmail = (process.env.ADMIN_EMAIL || "info@cycat.com").toLowerCase();
+const adminEmail = (process.env.ADMIN_EMAIL || "info@cycat.ca").toLowerCase();
 const publicBackendUrl = (process.env.PUBLIC_BACKEND_URL || "").replace(/\/$/, "");
 const publicFrontendUrl = (process.env.PUBLIC_FRONTEND_URL || "").replace(/\/$/, "");
 
