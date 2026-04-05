@@ -78,6 +78,24 @@ h1, h2 {
   box-shadow: 0 24px 60px rgba(31, 63, 43, 0.18);
 }
 
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.logo-img {
+  height: 42px;
+  width: auto;
+  display: block;
+}
+
+.input-help {
+  font-size: 0.8rem;
+  color: #5b6b60;
+}
+
 .auth-header h1 {
   font-size: 2.2rem;
   margin-bottom: 0.75rem;
@@ -101,6 +119,15 @@ input {
   border-radius: 12px;
   border: 1px solid #d6d6d6;
   font-size: 1rem;
+}
+
+textarea {
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid #d6d6d6;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
 }
 
 button {
@@ -211,6 +238,77 @@ button:hover {
   gap: 1.5rem;
 }
 
+.brand-block {
+  max-width: 520px;
+}
+
+.app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.app-nav a {
+  text-decoration: none;
+  color: var(--forest);
+  border: 1px solid rgba(31, 63, 43, 0.2);
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.app-nav a.active {
+  background: var(--forest);
+  color: var(--white);
+  border-color: var(--forest);
+}
+
+.header-actions {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: end;
+}
+
+.ticket-card {
+  background: var(--white);
+  border-radius: 18px;
+  padding: 0.75rem 1rem;
+  text-align: right;
+  box-shadow: 0 12px 26px rgba(31, 63, 43, 0.12);
+}
+
+.ticket-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--sage);
+}
+
+.ticket-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--forest);
+}
+
+.ticket-note {
+  font-size: 0.85rem;
+  color: #4b5c52;
+}
+
+.certificate-card {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 22px;
+  background: var(--white);
+  box-shadow: 0 16px 40px rgba(31, 63, 43, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
 .app-main {
   width: min(1200px, 100%);
   margin: 0 auto;
@@ -253,6 +351,17 @@ button:hover {
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+
+.photo-required {
+  font-size: 0.8rem;
+  color: #5b6b60;
+  align-self: center;
+}
+
+button.small {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
 }
 
 .bingo-card input[type="checkbox"] {
@@ -321,6 +430,359 @@ button:hover {
 .toast.show {
   opacity: 1;
   transform: translateY(0);
+}
+
+.page-body {
+  padding-bottom: 3rem;
+}
+
+.page-main {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.page-card {
+  background: var(--white);
+  padding: 2rem;
+  border-radius: 22px;
+  box-shadow: 0 16px 40px rgba(31, 63, 43, 0.1);
+}
+
+.leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.leaderboard-table-wrap {
+  margin-top: 1.5rem;
+  overflow-x: auto;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  text-align: left;
+  padding: 0.8rem 0.6rem;
+  border-bottom: 1px solid #e6efe3;
+  font-size: 0.95rem;
+}
+
+.leaderboard-table th {
+  color: var(--sage);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+}
+
+.leaderboard-table tr.current-user {
+  background: #daf0df;
+}
+
+.leaderboard-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.leaderboard-avatar {
+  width: 42px;
+  height: 42px;
+  position: relative;
+}
+
+.leaderboard-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.leaderboard-avatar .prop-layer {
+  pointer-events: none;
+}
+
+.settings-card {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.avatar-preview {
+  width: 140px;
+  height: 140px;
+  border-radius: 24px;
+  background: #f2f7ef;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e3e9de;
+}
+
+.avatar-frame {
+  width: 120px;
+  height: 120px;
+  position: relative;
+}
+
+.avatar-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.avatar-option {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem;
+  border-radius: 16px;
+  border: 1px solid #e0eadf;
+  background: #f8fbf4;
+  font-size: 0.85rem;
+}
+
+.avatar-option img {
+  width: 64px;
+  height: 64px;
+}
+
+.avatar-option.selected {
+  border-color: var(--forest);
+  box-shadow: 0 8px 18px rgba(31, 63, 43, 0.18);
+}
+
+.avatar-section h3 {
+  margin-bottom: 0.25rem;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  background: #f3f8ee;
+  border: 1px solid #e0eadf;
+}
+
+.danger-card {
+  border: 1px solid #f3c6c6;
+}
+
+button.danger {
+  border-color: #b94a4a;
+  color: #b94a4a;
+}
+
+.certificate-wrap {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.certificate-canvas {
+  background: #ffffff;
+  padding: 1.5rem;
+}
+
+.certificate-border {
+  border: 2px solid #1f3f2b;
+  padding: 2rem;
+  border-radius: 18px;
+  background: #fffdf6;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.certificate-header h2 {
+  margin-top: 0.4rem;
+}
+
+.certificate-header h3 {
+  font-size: 1.6rem;
+  margin-top: 0.5rem;
+}
+
+.certificate-signature {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+}
+
+.certificate-signature img {
+  width: 260px;
+}
+
+.theme-dark {
+  --sand: #141914;
+  --white: #1e2520;
+  --ink: #f5f4ee;
+  background: radial-gradient(circle at top left, #1d2b22, #0f1512 55%, #101411 100%);
+}
+
+.theme-dark .auth-panel,
+.theme-dark .page-card,
+.theme-dark .admin-panel,
+.theme-dark .bingo-card,
+.theme-dark .certificate-card,
+.theme-dark .ticket-card {
+  background: #1e2520;
+  color: #f5f4ee;
+  border-color: #2a352d;
+}
+
+.theme-dark .lede,
+.theme-dark .input-help,
+.theme-dark .ticket-note,
+.theme-dark .stat-label,
+.theme-dark .auth-message,
+.theme-dark .consent-note {
+  color: #cbd6c9;
+}
+
+.theme-dark .app-nav a {
+  background: rgba(31, 37, 32, 0.9);
+  color: #f5f4ee;
+  border-color: #2a352d;
+}
+
+.theme-dark .app-nav a.active {
+  background: #7fc68a;
+  color: #0f1512;
+}
+
+.theme-dark input,
+.theme-dark textarea {
+  background: #141914;
+  color: #f5f4ee;
+  border-color: #2a352d;
+}
+
+.theme-dark .avatar-option {
+  background: #1b221d;
+  border-color: #2a352d;
+}
+
+.theme-dark .toggle-row {
+  background: #1b221d;
+  border-color: #2a352d;
+}
+
+.theme-dark .certificate-border {
+  background: #202922;
+}
+
+.rules-content h2 {
+  margin-bottom: 0.75rem;
+}
+
+.rules-section {
+  background: var(--white);
+  padding: 1.5rem;
+  border-radius: 18px;
+  border: 1px solid #e6efe3;
+  margin-top: 1.2rem;
+}
+
+.rules-section h3 {
+  font-family: "Fraunces", serif;
+  margin-bottom: 0.65rem;
+}
+
+.rules-section ul {
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.consent-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 36, 28, 0.6);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  padding: 1.5rem;
+  z-index: 30;
+}
+
+.consent-modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.consent-card {
+  background: var(--white);
+  border-radius: 24px;
+  padding: 2rem;
+  width: min(560px, 100%);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.25);
+  display: grid;
+  gap: 1rem;
+}
+
+.consent-body {
+  display: grid;
+  gap: 0.8rem;
+  color: #2d3a32;
+}
+
+.consent-body ul {
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.consent-check {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  font-size: 0.95rem;
+  color: #2a3a31;
+}
+
+.consent-check input {
+  margin-top: 0.2rem;
+}
+
+.consent-note {
+  font-size: 0.85rem;
+  color: #5b6b60;
+}
+
+.modal-open {
+  overflow: hidden;
 }
 
 .admin-panel {
@@ -579,6 +1041,15 @@ button:hover {
   .app-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-items: flex-start;
+  }
+
+  .app-nav {
+    width: 100%;
   }
 
   .bingo-grid {

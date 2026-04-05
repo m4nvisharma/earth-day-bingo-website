@@ -82,6 +82,53 @@ const fallbackBingoLabels = [
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const bingoFilePath = path.resolve(__dirname, "../../prompts/bingo_cards.txt");
+const usernameBlocklistPath = path.resolve(__dirname, "../../content/username_blocklist.txt");
+const MAX_DAILY_ACTIONS = Number(process.env.MAX_DAILY_ACTIONS || 4);
+
+const baseBlocked = [
+  "admin",
+  "support",
+  "moderator",
+  "staff",
+  "cycat",
+  "glocal",
+  "fuck",
+  "shit",
+  "bitch",
+  "asshole",
+  "cunt",
+  "dick",
+  "porn",
+  "sex"
+];
+
+function loadUsernameBlocklist() {
+  try {
+    if (!fs.existsSync(usernameBlocklistPath)) return baseBlocked;
+    const content = fs.readFileSync(usernameBlocklistPath, "utf8");
+    const extra = content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    return [...new Set([...baseBlocked, ...extra].map((word) => word.toLowerCase()))];
+  } catch (error) {
+    console.warn("Unable to read username blocklist; using base list.");
+    return baseBlocked;
+  }
+}
+
+function validateUsername(raw) {
+  const username = String(raw || "").trim();
+  if (!/^[a-zA-Z0-9]{4,}$/.test(username)) {
+    return { ok: false, reason: "Username must be at least 4 characters and contain only letters and numbers." };
+  }
+  const lowered = username.toLowerCase();
+  const blocklist = loadUsernameBlocklist();
+  if (blocklist.some((blocked) => blocked && lowered.includes(blocked))) {
+    return { ok: false, reason: "That username is not allowed. Please choose another." };
+  }
+  return { ok: true, username };
+}
 
 function normalizeLabel(label) {
   return label
@@ -220,9 +267,14 @@ async function trySendLineCompletionEmail(payload) {
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
 app.post("/api/auth/signup", async (req, res) => {
-  const { email, password, displayName } = req.body || {};
-  if (!email || !password || !displayName) {
+  const { email, password, displayName, username } = req.body || {};
+  if (!email || !password || !username) {
     return res.status(400).json({ error: "Missing fields" });
+  }
+
+  const usernameCheck = validateUsername(username);
+  if (!usernameCheck.ok) {
+    return res.status(400).json({ error: usernameCheck.reason });
   }
 
   const existing = await query("SELECT id FROM users WHERE email = $1", [email]);
@@ -230,15 +282,22 @@ app.post("/api/auth/signup", async (req, res) => {
     return res.status(409).json({ error: "Email already in use" });
   }
 
+  const usernameExisting = await query("SELECT id FROM users WHERE username = $1", [usernameCheck.username]);
+  if (usernameExisting.rowCount > 0) {
+    return res.status(409).json({ error: "Username already in use" });
+  }
+
   const passwordHash = await bcrypt.hash(password, 10);
   const userId = randomUUID();
+  const displayCandidate = (displayName || "").trim();
+  const safeDisplayName = displayCandidate || usernameCheck.username;
   await query(
-    "INSERT INTO users (id, email, password_hash, display_name) VALUES ($1, $2, $3, $4)",
-    [userId, email, passwordHash, displayName]
+    "INSERT INTO users (id, email, password_hash, display_name, username) VALUES ($1, $2, $3, $4, $5)",
+    [userId, email, passwordHash, safeDisplayName, usernameCheck.username]
   );
 
   const token = signToken({ sub: userId, email });
-  return res.json({ token, user: { id: userId, email, displayName } });
+  return res.json({ token, user: { id: userId, email, displayName: safeDisplayName, username: usernameCheck.username } });
 });
 
 app.post("/api/auth/login", async (req, res) => {
@@ -247,7 +306,7 @@ app.post("/api/auth/login", async (req, res) => {
     return res.status(400).json({ error: "Missing fields" });
   }
 
-  const { rows } = await query("SELECT id, password_hash, display_name FROM users WHERE email = $1", [email]);
+  const { rows } = await query("SELECT id, password_hash, display_name, username FROM users WHERE email = $1", [email]);
   if (rows.length === 0) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
@@ -257,7 +316,90 @@ app.post("/api/auth/login", async (req, res) => {
   if (!ok) return res.status(401).json({ error: "Invalid credentials" });
 
   const token = signToken({ sub: user.id, email });
-  return res.json({ token, user: { id: user.id, email, displayName: user.display_name } });
+  return res.json({ token, user: { id: user.id, email, displayName: user.display_name, username: user.username } });
+});
+
+app.get("/api/user/me", authMiddleware, async (req, res) => {
+  const userId = req.user.sub;
+  const { rows } = await query(
+    `SELECT id, email, display_name, username, consent_photo_use, consent_authentic, consent_at, theme_preference, certificate_earned_at
+     FROM users WHERE id = $1`,
+    [userId]
+  );
+  if (rows.length === 0) return res.status(404).json({ error: "User not found" });
+  const user = rows[0];
+  return res.json({
+    id: user.id,
+    email: user.email,
+    displayName: user.display_name,
+    username: user.username,
+    consentPhotoUse: user.consent_photo_use,
+    consentAuthentic: user.consent_authentic,
+    consentAt: user.consent_at,
+    themePreference: user.theme_preference,
+    certificateEarnedAt: user.certificate_earned_at
+  });
+});
+
+app.get("/api/user/profile", authMiddleware, async (req, res) => {
+  const userId = req.user.sub;
+  const { rows } = await query(
+    `SELECT username, display_name, avatar_base, avatar_props, theme_preference
+     FROM users WHERE id = $1`,
+    [userId]
+  );
+  if (rows.length === 0) return res.status(404).json({ error: "User not found" });
+  const user = rows[0];
+  return res.json({
+    username: user.username,
+    displayName: user.display_name,
+    avatarBase: user.avatar_base,
+    avatarProps: user.avatar_props || [],
+    themePreference: user.theme_preference || "light"
+  });
+});
+
+app.put("/api/user/profile", authMiddleware, async (req, res) => {
+  const userId = req.user.sub;
+  const { avatarBase, avatarProps, themePreference } = req.body || {};
+  const props = Array.isArray(avatarProps) ? avatarProps.slice(0, 6) : [];
+  const theme = themePreference === "dark" ? "dark" : "light";
+
+  await query(
+    `UPDATE users
+     SET avatar_base = $1,
+         avatar_props = $2,
+         theme_preference = $3
+     WHERE id = $4`,
+    [avatarBase || null, props, theme, userId]
+  );
+
+  return res.json({ ok: true });
+});
+
+app.delete("/api/user", authMiddleware, async (req, res) => {
+  const userId = req.user.sub;
+  await query("DELETE FROM users WHERE id = $1", [userId]);
+  return res.json({ ok: true });
+});
+
+app.put("/api/user/consent", authMiddleware, async (req, res) => {
+  const userId = req.user.sub;
+  const { consentPhotoUse, consentAuthentic } = req.body || {};
+  if (consentPhotoUse !== true || consentAuthentic !== true) {
+    return res.status(400).json({ error: "Consent must be accepted" });
+  }
+
+  await query(
+    `UPDATE users
+     SET consent_photo_use = TRUE,
+         consent_authentic = TRUE,
+         consent_at = NOW()
+     WHERE id = $1`,
+    [userId]
+  );
+
+  return res.json({ ok: true });
 });
 
 app.post("/api/auth/forgot-password", async (req, res) => {
@@ -357,6 +499,17 @@ app.put("/api/bingo/state", authMiddleware, async (req, res) => {
     return res.status(400).json({ error: "Invalid payload" });
   }
 
+  if (checked === true) {
+    const { rows: imageRows } = await query(
+      "SELECT image_url FROM user_item_status WHERE user_id = $1 AND item_id = $2",
+      [userId, itemId]
+    );
+    const imageUrl = imageRows[0]?.image_url;
+    if (!imageUrl) {
+      return res.status(400).json({ error: "Photo required before completion" });
+    }
+  }
+
   const { rows: itemRows } = await query("SELECT id, label FROM bingo_items ORDER BY id ASC");
   const { rows: currentRows } = await query(
     "SELECT item_id, checked, image_url FROM user_item_status WHERE user_id = $1",
@@ -410,6 +563,18 @@ app.post("/api/bingo/item/:id/image", authMiddleware, upload.single("image"), as
   );
   const statusMap = new Map(currentRows.map((row) => [row.item_id, row]));
   const beforeChecked = itemRows.map((item) => Boolean(statusMap.get(item.id)?.checked));
+  const currentStatus = statusMap.get(itemId);
+
+  if (!currentStatus?.checked) {
+    const { rows: dailyRows } = await query(
+      "SELECT count FROM user_daily_actions WHERE user_id = $1 AND action_date = CURRENT_DATE",
+      [userId]
+    );
+    const count = dailyRows[0]?.count ?? 0;
+    if (count >= MAX_DAILY_ACTIONS) {
+      return res.status(429).json({ error: `Daily limit reached (${MAX_DAILY_ACTIONS}). Try again tomorrow.` });
+    }
+  }
 
   const key = `${userId}/${itemId}-${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, "")}`;
   const imageUrl = await storeImage({
@@ -426,6 +591,16 @@ app.post("/api/bingo/item/:id/image", authMiddleware, upload.single("image"), as
     [userId, itemId, imageUrl]
   );
 
+  if (!currentStatus?.checked) {
+    await query(
+      `INSERT INTO user_daily_actions (user_id, action_date, count)
+       VALUES ($1, CURRENT_DATE, 1)
+       ON CONFLICT (user_id, action_date)
+       DO UPDATE SET count = user_daily_actions.count + 1`,
+      [userId]
+    );
+  }
+
   const nextStatusMap = new Map(statusMap);
   nextStatusMap.set(itemId, {
     ...(nextStatusMap.get(itemId) || { item_id: itemId }),
@@ -437,6 +612,15 @@ app.post("/api/bingo/item/:id/image", authMiddleware, upload.single("image"), as
   const afterLines = getCompletedLines(afterChecked);
   const newLines = afterLines.filter((line) => !beforeLines.some((prev) => prev.key === line.key));
 
+  if (afterChecked.every(Boolean)) {
+    await query(
+      `UPDATE users
+       SET certificate_earned_at = COALESCE(certificate_earned_at, NOW())
+       WHERE id = $1`,
+      [userId]
+    );
+  }
+
   if (newLines.length > 0) {
     const { rows: userRows } = await query("SELECT id, email, display_name FROM users WHERE id = $1", [userId]);
     const user = userRows[0];
@@ -446,6 +630,53 @@ app.post("/api/bingo/item/:id/image", authMiddleware, upload.single("image"), as
   }
 
   return res.json({ imageUrl });
+});
+
+app.get("/api/leaderboard", authMiddleware, async (req, res) => {
+  const userId = req.user.sub;
+  const { rows: itemRows } = await query("SELECT id FROM bingo_items ORDER BY id ASC");
+  const itemIds = itemRows.map((row) => row.id);
+
+  const { rows: users } = await query(
+    "SELECT id, username, display_name, avatar_base, avatar_props FROM users"
+  );
+  const { rows: statuses } = await query(
+    "SELECT user_id, item_id, checked, image_url FROM user_item_status"
+  );
+
+  const statusByUser = new Map();
+  users.forEach((user) => {
+    statusByUser.set(user.id, new Map());
+  });
+  statuses.forEach((row) => {
+    if (!statusByUser.has(row.user_id)) {
+      statusByUser.set(row.user_id, new Map());
+    }
+    statusByUser.get(row.user_id).set(row.item_id, row);
+  });
+
+  const ranked = users.map((user) => {
+    const statusMap = statusByUser.get(user.id) || new Map();
+    const checked = itemIds.map((itemId) => Boolean(statusMap.get(itemId)?.checked));
+    const tilesCompleted = checked.filter(Boolean).length;
+    const linesCompleted = countCompletedLines(checked, 5);
+    return {
+      id: user.id,
+      username: user.username || user.display_name,
+      linesCompleted,
+      tilesCompleted,
+      avatarBase: user.avatar_base,
+      avatarProps: user.avatar_props || []
+    };
+  });
+
+  ranked.sort((a, b) => {
+    if (b.linesCompleted !== a.linesCompleted) return b.linesCompleted - a.linesCompleted;
+    if (b.tilesCompleted !== a.tilesCompleted) return b.tilesCompleted - a.tilesCompleted;
+    return a.username.localeCompare(b.username, undefined, { sensitivity: "base" });
+  });
+
+  return res.json({ users: ranked, currentUserId: userId });
 });
 
 app.delete("/api/bingo/item/:id/image", authMiddleware, async (req, res) => {

@@ -1,0 +1,51 @@
+{
+  "consent": {
+    "title": "Photo consent and authenticity",
+    "summary": "Before continuing, please confirm how your photos can be used and that your submissions are authentic.",
+    "points": [
+      "Your uploaded photos may be used by CYCAT to showcase Earth Day Bingo impact.",
+      "All submissions must be original, taken by you, and not AI-generated or sourced online.",
+      "Submissions may be reviewed to verify authenticity and appropriate content."
+    ],
+    "photoUseLabel": "I allow CYCAT to use my uploaded photos.",
+    "authenticLabel": "I confirm my uploads are my own photos, not AI-generated, and not taken from the internet.",
+    "note": "You can proceed once the countdown finishes and both checkboxes are selected."
+  },
+  "rules": {
+    "title": "Earth Day Bingo rules",
+    "intro": "Complete eco-actions, upload proof, and collect tickets for each completed line.",
+    "sections": [
+      {
+        "title": "How the game works",
+        "bullets": [
+          "Complete a bingo tile by doing the action and uploading a photo proof.",
+          "Each completed row, column, or diagonal counts as one raffle ticket.",
+          "You can keep completing tiles to earn more tickets."
+        ]
+      },
+      {
+        "title": "Photo and authenticity policy",
+        "bullets": [
+          "Uploaded photos must be original and taken by you.",
+          "AI-generated, edited from online sources, or copied images are not allowed.",
+          "Submissions may be reviewed for authenticity."
+        ]
+      },
+      {
+        "title": "Community expectations",
+        "bullets": [
+          "No inappropriate behavior, photos, or usernames.",
+          "Be respectful in all submissions and interactions.",
+          "CYCAT may remove entries that violate these guidelines."
+        ]
+      },
+      {
+        "title": "Consent notice",
+        "bullets": [
+          "By participating, you consent to CYCAT using submitted photos for program highlights.",
+          "Your uploads are required for completing tiles."
+        ]
+      }
+    ]
+  }
+}

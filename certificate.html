@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Certificate - Earth Day Bingo</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="app-body page-body">
+    <header class="app-header">
+      <div class="brand-block">
+        <div class="logo-row">
+          <img src="cycat-logo-main.jpg" alt="CYCAT" class="logo-img" />
+          <img src="glocal-logo-main.png" alt="Glocal" class="logo-img" />
+        </div>
+        <p class="eyebrow">Earth Day Bingo</p>
+        <h1>Completion certificate</h1>
+        <p class="lede">Download a certificate once your card is complete.</p>
+      </div>
+      <nav class="app-nav" aria-label="Primary">
+        <a href="rules.html">Rules</a>
+        <a href="app.html">Bingo Board</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="settings.html">Settings</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </header>
+
+    <main class="page-main">
+      <section class="page-card certificate-wrap">
+        <div id="certificateCanvas" class="certificate-canvas">
+          <div class="certificate-border">
+            <div class="certificate-header">
+              <p class="eyebrow">Earth Day Bingo Certificate</p>
+              <h2>Certificate of Completion</h2>
+              <p class="lede">Presented to</p>
+              <h3 id="certificateName">Participant</h3>
+            </div>
+            <div class="certificate-body">
+              <p id="certificateDetail">For completing the Earth Day Bingo card.</p>
+              <p id="certificateDate">Date</p>
+            </div>
+            <div class="certificate-signature">
+              <img src="assets/signature-placeholder.svg" alt="Executive Director signature" />
+              <p>Executive Director, CYCAT</p>
+            </div>
+          </div>
+        </div>
+        <button id="downloadCertificate" class="primary">Download PDF</button>
+        <p id="certificateMessage" class="auth-message" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="config.js?v=20260329"></script>
+    <script src="theme.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="certificate.js"></script>
+  </body>
+</html>

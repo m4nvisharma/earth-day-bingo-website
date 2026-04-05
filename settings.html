@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings - Earth Day Bingo</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="app-body page-body">
+    <header class="app-header">
+      <div class="brand-block">
+        <div class="logo-row">
+          <img src="cycat-logo-main.jpg" alt="CYCAT" class="logo-img" />
+          <img src="glocal-logo-main.png" alt="Glocal" class="logo-img" />
+        </div>
+        <p class="eyebrow">Earth Day Bingo</p>
+        <h1>Settings</h1>
+        <p class="lede">Profile, appearance, and account preferences.</p>
+      </div>
+      <nav class="app-nav" aria-label="Primary">
+        <a href="rules.html">Rules</a>
+        <a href="app.html">Bingo Board</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="settings.html" class="active">Settings</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </header>
+
+    <main class="page-main">
+      <section class="page-card settings-card">
+        <div class="settings-header">
+          <div>
+            <h2>Profile and appearance</h2>
+            <p class="lede">Choose an avatar and theme for your account.</p>
+          </div>
+          <button id="saveSettings" class="primary">Save changes</button>
+        </div>
+
+        <div class="settings-grid">
+          <div>
+            <h3>Avatar preview</h3>
+            <div id="avatarPreview" class="avatar-preview"></div>
+            <p class="input-help">Your avatar appears on the leaderboard.</p>
+          </div>
+          <div>
+            <h3>Theme</h3>
+            <label class="toggle-row">
+              <span>Dark mode</span>
+              <input type="checkbox" id="darkModeToggle" />
+            </label>
+          </div>
+        </div>
+
+        <div class="avatar-section">
+          <h3>Avatar base (Earth pack)</h3>
+          <div id="avatarBases" class="avatar-options"></div>
+        </div>
+
+        <div class="avatar-section">
+          <h3>Props</h3>
+          <div id="avatarProps" class="avatar-options"></div>
+        </div>
+      </section>
+
+      <section class="page-card danger-card">
+        <h2>Delete account</h2>
+        <p class="lede">This permanently removes your account and all uploaded data.</p>
+        <button id="deleteAccount" class="ghost danger">Delete account</button>
+        <p id="settingsMessage" class="auth-message" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="config.js?v=20260329"></script>
+    <script src="theme.js"></script>
+    <script src="settings.js"></script>
+  </body>
+</html>

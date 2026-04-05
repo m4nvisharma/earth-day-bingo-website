@@ -22,6 +22,27 @@ export async function ensureSchema() {
   `);
 
   await query(`
+    ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS consent_photo_use BOOLEAN NOT NULL DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS consent_authentic BOOLEAN NOT NULL DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS username TEXT UNIQUE,
+      ADD COLUMN IF NOT EXISTS avatar_base TEXT,
+      ADD COLUMN IF NOT EXISTS avatar_props TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+      ADD COLUMN IF NOT EXISTS theme_preference TEXT NOT NULL DEFAULT 'light',
+      ADD COLUMN IF NOT EXISTS certificate_earned_at TIMESTAMPTZ;
+  `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS user_daily_actions (
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      action_date DATE NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_id, action_date)
+    );
+  `);
+
+  await query(`
     CREATE TABLE IF NOT EXISTS bingo_items (
       id SERIAL PRIMARY KEY,
       label TEXT NOT NULL

@@ -17,6 +17,10 @@
     <main class="auth-shell">
       <section class="auth-panel">
         <div class="auth-header">
+          <div class="logo-row">
+            <img src="cycat-logo-main.jpg" alt="CYCAT" class="logo-img" />
+            <img src="glocal-logo-main.png" alt="Glocal" class="logo-img" />
+          </div>
           <p class="eyebrow">Earth Day Bingo</p>
           <h1>Welcome back to the wild</h1>
           <p class="lede">Log in to track your eco-actions and upload proof for each tile.</p>
@@ -48,8 +52,13 @@
 
         <form id="signupForm" class="auth-form">
           <label>
-            Full name
-            <input type="text" name="displayName" required placeholder="Your name" />
+            Username
+            <input type="text" name="username" required minlength="4" placeholder="ecohero" />
+            <span class="input-help">At least 4 characters, letters and numbers only.</span>
+          </label>
+          <label>
+            Full name (optional)
+            <input type="text" name="displayName" placeholder="Your name" />
           </label>
           <label>
             Email

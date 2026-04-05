@@ -15,6 +15,14 @@ function setMessage(text) {
   authMessage.textContent = text;
 }
 
+function normalizeUsername(value) {
+  return String(value || "").trim();
+}
+
+function isValidUsername(value) {
+  return /^[a-zA-Z0-9]{4,}$/.test(value);
+}
+
 async function handleAuth(endpoint, payload) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     method: "POST",
@@ -29,6 +37,9 @@ async function handleAuth(endpoint, payload) {
 
   localStorage.setItem("token", data.token);
   localStorage.setItem("displayName", data.user.displayName);
+  if (data.user.username) {
+    localStorage.setItem("username", data.user.username);
+  }
   localStorage.setItem("userEmail", data.user.email);
   window.location.href = "app.html";
 }
@@ -51,8 +62,14 @@ signupForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   setMessage("");
   const formData = new FormData(signupForm);
+  const username = normalizeUsername(formData.get("username"));
+  if (!isValidUsername(username)) {
+    setMessage("Username must be at least 4 characters and contain only letters and numbers.");
+    return;
+  }
   try {
     await handleAuth("/api/auth/signup", {
+      username,
       displayName: formData.get("displayName"),
       email: formData.get("email"),
       password: formData.get("password")

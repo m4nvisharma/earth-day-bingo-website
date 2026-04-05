@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact - Earth Day Bingo</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="app-body page-body">
+    <header class="app-header">
+      <div class="brand-block">
+        <div class="logo-row">
+          <img src="cycat-logo-main.jpg" alt="CYCAT" class="logo-img" />
+          <img src="glocal-logo-main.png" alt="Glocal" class="logo-img" />
+        </div>
+        <p class="eyebrow">Earth Day Bingo</p>
+        <h1>Contact CYCAT</h1>
+        <p class="lede">Have a question or concern? Reach out anytime.</p>
+      </div>
+      <nav class="app-nav" aria-label="Primary">
+        <a href="rules.html">Rules</a>
+        <a href="app.html">Bingo Board</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="settings.html">Settings</a>
+        <a href="contact.html" class="active">Contact</a>
+      </nav>
+    </header>
+
+    <main class="page-main">
+      <section class="page-card contact-card">
+        <h2>Send a message</h2>
+        <p class="lede">Use the form below and we will route it to the CYCAT inbox.</p>
+        <form id="contactForm" class="auth-form">
+          <label>
+            Your name
+            <input type="text" name="name" required />
+          </label>
+          <label>
+            Your email
+            <input type="email" name="email" required />
+          </label>
+          <label>
+            Message
+            <textarea name="message" rows="5" required></textarea>
+          </label>
+          <button type="submit" class="primary">Open email draft</button>
+        </form>
+        <p id="contactMessage" class="auth-message" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="config.js?v=20260329"></script>
+    <script src="theme.js"></script>
+    <script src="contact.js"></script>
+  </body>
+</html>

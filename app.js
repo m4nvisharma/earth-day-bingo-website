@@ -26,11 +26,30 @@ const adminDetailClose = document.getElementById("adminDetailClose");
 const adminDetailName = document.getElementById("adminDetailName");
 const adminDetailMeta = document.getElementById("adminDetailMeta");
 const adminDetailGrid = document.getElementById("adminDetailGrid");
+const ticketCount = document.getElementById("ticketCount");
+const consentModal = document.getElementById("consentModal");
+const consentTitle = document.getElementById("consentTitle");
+const consentBody = document.getElementById("consentBody");
+const consentUsePhotos = document.getElementById("consentUsePhotos");
+const consentUsePhotosLabel = document.getElementById("consentUsePhotosLabel");
+const consentAuthentic = document.getElementById("consentAuthentic");
+const consentAuthenticLabel = document.getElementById("consentAuthenticLabel");
+const consentAgreeBtn = document.getElementById("consentAgreeBtn");
+const consentNote = document.getElementById("consentNote");
+const certificateBtn = document.getElementById("certificateBtn");
+const certificateCard = document.getElementById("certificateCard");
 
 let items = [];
 let state = new Map();
 let lastLineCount = 0;
 let hasLoadedLines = false;
+let consentReadyAt = 0;
+
+function applyTheme(theme) {
+  const mode = theme === "dark" ? "dark" : "light";
+  document.body.classList.toggle("theme-dark", mode === "dark");
+  localStorage.setItem("theme", mode);
+}
 
 const adminEmail = (window.ADMIN_EMAIL || "manviisharma01@gmail.com").toLowerCase();
 const userEmail = (localStorage.getItem("userEmail") || "").toLowerCase();
@@ -81,8 +100,10 @@ function getLineCompletionCount() {
 function updateGreeting() {
   const userGreeting = document.getElementById("userGreeting");
   if (!userGreeting) return;
+  const username = localStorage.getItem("username") || "";
   const displayName = localStorage.getItem("displayName") || "";
-  const firstName = displayName.trim().split(/\s+/)[0] || "";
+  const rawName = username || displayName;
+  const firstName = rawName.trim().split(/\s+/)[0] || "";
   userGreeting.textContent = firstName ? `Welcome, ${firstName}` : "";
 }
 
@@ -119,31 +140,45 @@ function renderGrid() {
     const controls = document.createElement("div");
     controls.className = "controls";
 
-    const checkLabel = document.createElement("label");
-    checkLabel.className = "file-label";
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = status.checked;
-    checkbox.addEventListener("change", async () => {
-      await updateChecked(item.id, checkbox.checked);
-      showToast(checkbox.checked ? "Marked complete" : "Unchecked");
-    });
-    checkLabel.append("Done", checkbox);
-
     const fileLabel = document.createElement("label");
     fileLabel.className = "file-label";
-    fileLabel.textContent = "Add photo";
+    fileLabel.textContent = status.imageUrl ? "Replace photo" : "Add photo";
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.accept = "image/*";
     fileInput.addEventListener("change", async () => {
       if (fileInput.files.length === 0) return;
-      await uploadImage(item.id, fileInput.files[0]);
-      showToast("Photo saved");
+      try {
+        await uploadImage(item.id, fileInput.files[0]);
+        showToast("Photo saved");
+      } catch (error) {
+        showToast(error.message);
+      }
     });
     fileLabel.appendChild(fileInput);
 
-    controls.append(checkLabel, fileLabel);
+    controls.append(fileLabel);
+
+    if (status.checked) {
+      const undoBtn = document.createElement("button");
+      undoBtn.type = "button";
+      undoBtn.className = "ghost small";
+      undoBtn.textContent = "Undone";
+      undoBtn.addEventListener("click", async () => {
+        try {
+          await removeImage(item.id);
+          showToast("Marked undone");
+        } catch (error) {
+          showToast(error.message);
+        }
+      });
+      controls.appendChild(undoBtn);
+    } else {
+      const note = document.createElement("p");
+      note.className = "photo-required";
+      note.textContent = "Photo required to complete.";
+      controls.appendChild(note);
+    }
 
     card.append(title, controls);
 
@@ -171,6 +206,21 @@ function renderGrid() {
   const lineCount = getLineCompletionCount();
   if (bingoStatus) {
     bingoStatus.textContent = lineCount > 0 ? "Bingo achieved!" : "No bingo yet. Keep going.";
+  }
+  if (ticketCount) {
+    ticketCount.textContent = `${lineCount}`;
+  }
+
+  const isCardComplete = completed === items.length && items.length > 0;
+  if (certificateBtn) {
+    certificateBtn.disabled = !isCardComplete;
+    certificateBtn.textContent = isCardComplete ? "Download certificate" : "Complete all tiles to unlock";
+  }
+  if (isCardComplete) {
+    const storedDate = localStorage.getItem("certificateDate");
+    if (!storedDate) {
+      localStorage.setItem("certificateDate", new Date().toISOString());
+    }
   }
 
   if (hasLoadedLines && lineCount > lastLineCount) {
@@ -222,6 +272,129 @@ async function uploadImage(itemId, file) {
 
   state.set(itemId, { ...state.get(itemId), imageUrl: data.imageUrl, checked: true });
   renderGrid();
+}
+
+async function removeImage(itemId) {
+  const response = await fetch(`${API_BASE}/api/bingo/item/${itemId}/image`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || "Remove failed");
+  }
+
+  state.set(itemId, { ...state.get(itemId), imageUrl: null, checked: false });
+  renderGrid();
+}
+
+async function loadConsentCopy() {
+  const response = await fetch("content/copy.json");
+  if (!response.ok) {
+    throw new Error("Unable to load consent copy");
+  }
+  return response.json();
+}
+
+function openConsentModal() {
+  if (!consentModal) return;
+  consentModal.classList.add("show");
+  consentModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+}
+
+function closeConsentModal() {
+  if (!consentModal) return;
+  consentModal.classList.remove("show");
+  consentModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+}
+
+function updateConsentButton() {
+  if (!consentAgreeBtn) return;
+  const now = Date.now();
+  const remaining = Math.max(0, Math.ceil((consentReadyAt - now) / 1000));
+  const canClick = remaining === 0 && consentUsePhotos?.checked && consentAuthentic?.checked;
+  consentAgreeBtn.disabled = !canClick;
+  consentAgreeBtn.textContent = remaining > 0 ? `Agree (${remaining})` : "Agree";
+}
+
+function startConsentCountdown(seconds = 5) {
+  consentReadyAt = Date.now() + seconds * 1000;
+  updateConsentButton();
+  window.clearInterval(startConsentCountdown._timer);
+  startConsentCountdown._timer = window.setInterval(() => {
+    updateConsentButton();
+    if (Date.now() >= consentReadyAt) {
+      window.clearInterval(startConsentCountdown._timer);
+    }
+  }, 300);
+}
+
+async function ensureConsent() {
+  if (!consentModal) return;
+  const me = await apiFetch("/api/user/me");
+  if (me?.themePreference) {
+    applyTheme(me.themePreference);
+  }
+  if (me?.certificateEarnedAt) {
+    localStorage.setItem("certificateDate", me.certificateEarnedAt);
+  }
+  if (me?.consentPhotoUse && me?.consentAuthentic) return;
+
+  const copy = await loadConsentCopy();
+  const consent = copy?.consent || {};
+  if (consentTitle) consentTitle.textContent = consent.title || "Photo consent";
+  if (consentUsePhotosLabel) consentUsePhotosLabel.textContent = consent.photoUseLabel || consentUsePhotosLabel.textContent;
+  if (consentAuthenticLabel) consentAuthenticLabel.textContent = consent.authenticLabel || consentAuthenticLabel.textContent;
+  if (consentNote) consentNote.textContent = consent.note || "";
+
+  if (consentBody) {
+    consentBody.innerHTML = "";
+    if (consent.summary) {
+      const p = document.createElement("p");
+      p.textContent = consent.summary;
+      consentBody.appendChild(p);
+    }
+    if (Array.isArray(consent.points)) {
+      const ul = document.createElement("ul");
+      consent.points.forEach((point) => {
+        const li = document.createElement("li");
+        li.textContent = point;
+        ul.appendChild(li);
+      });
+      consentBody.appendChild(ul);
+    }
+  }
+
+  consentUsePhotos.checked = false;
+  consentAuthentic.checked = false;
+  openConsentModal();
+  startConsentCountdown(5);
+
+  const syncButton = () => updateConsentButton();
+  consentUsePhotos?.addEventListener("change", syncButton);
+  consentAuthentic?.addEventListener("change", syncButton);
+
+  consentAgreeBtn?.addEventListener("click", async () => {
+    try {
+      consentAgreeBtn.disabled = true;
+      await apiFetch("/api/user/consent", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          consentPhotoUse: true,
+          consentAuthentic: true
+        })
+      });
+      closeConsentModal();
+      showToast("Consent saved");
+    } catch (error) {
+      showToast(error.message);
+      updateConsentButton();
+    }
+  }, { once: true });
 }
 
 async function loadLeaderboard() {
@@ -304,6 +477,7 @@ async function loadAdminDetail(userId) {
 logoutBtn.addEventListener("click", () => {
   localStorage.removeItem("token");
   localStorage.removeItem("displayName");
+  localStorage.removeItem("username");
   localStorage.removeItem("userEmail");
   window.location.href = "index.html";
 });
@@ -312,6 +486,12 @@ if (closeCelebration) {
   closeCelebration.addEventListener("click", () => {
     celebration.classList.remove("show");
     celebration.setAttribute("aria-hidden", "true");
+  });
+}
+
+if (certificateBtn) {
+  certificateBtn.addEventListener("click", () => {
+    window.location.href = "certificate.html";
   });
 }
 
@@ -329,6 +509,9 @@ if (isAdmin && adminPanel) {
   adminPanel.hidden = true;
 }
 
-loadData().catch((error) => {
-  showToast(error.message);
-});
+Promise.resolve()
+  .then(() => ensureConsent())
+  .then(() => loadData())
+  .catch((error) => {
+    showToast(error.message);
+  });

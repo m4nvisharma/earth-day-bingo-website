@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leaderboard - Earth Day Bingo</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="app-body page-body">
+    <header class="app-header">
+      <div class="brand-block">
+        <div class="logo-row">
+          <img src="cycat-logo-main.jpg" alt="CYCAT" class="logo-img" />
+          <img src="glocal-logo-main.png" alt="Glocal" class="logo-img" />
+        </div>
+        <p class="eyebrow">Earth Day Bingo</p>
+        <h1>Leaderboard</h1>
+        <p class="lede">See how many lines participants have completed.</p>
+      </div>
+      <nav class="app-nav" aria-label="Primary">
+        <a href="rules.html">Rules</a>
+        <a href="app.html">Bingo Board</a>
+        <a href="leaderboard.html" class="active">Leaderboard</a>
+        <a href="settings.html">Settings</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </header>
+
+    <main class="page-main">
+      <section class="page-card leaderboard-card">
+        <div class="leaderboard-header">
+          <div>
+            <h2>Rankings</h2>
+            <p class="lede">Usernames ranked by lines completed.</p>
+          </div>
+          <button id="refreshLeaderboard" class="ghost">Refresh</button>
+        </div>
+        <div class="leaderboard-table-wrap">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>Lines</th>
+                <th>Tiles</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody"></tbody>
+          </table>
+        </div>
+        <p id="leaderboardMessage" class="auth-message" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="config.js?v=20260329"></script>
+    <script src="theme.js"></script>
+    <script src="leaderboard.js"></script>
+  </body>
+</html>

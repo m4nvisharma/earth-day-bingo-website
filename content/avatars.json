@@ -1,0 +1,36 @@
+{
+  "bases": [
+    {
+      "id": "earth-sprout",
+      "label": "Earth Sprout",
+      "src": "assets/avatars/base-earth-sprout.svg"
+    },
+    {
+      "id": "forest-friend",
+      "label": "Forest Friend",
+      "src": "assets/avatars/base-forest-friend.svg"
+    },
+    {
+      "id": "ocean-buddy",
+      "label": "Ocean Buddy",
+      "src": "assets/avatars/base-ocean-buddy.svg"
+    }
+  ],
+  "props": [
+    {
+      "id": "sun-hat",
+      "label": "Sun Hat",
+      "src": "assets/avatars/prop-sun-hat.svg"
+    },
+    {
+      "id": "leaf-glasses",
+      "label": "Leaf Glasses",
+      "src": "assets/avatars/prop-leaf-glasses.svg"
+    },
+    {
+      "id": "eco-mustache",
+      "label": "Eco Mustache",
+      "src": "assets/avatars/prop-eco-mustache.svg"
+    }
+  ]
+}
