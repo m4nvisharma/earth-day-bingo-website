@@ -15,7 +15,7 @@ const settingsMessage = document.getElementById("settingsMessage");
 
 let avatarData = null;
 let selectedBase = null;
-let selectedProps = new Set();
+let selectedOverlay = null;
 
 function setMessage(text) {
   if (settingsMessage) settingsMessage.textContent = text;
@@ -61,20 +61,21 @@ function renderPreview() {
   baseImg.className = "avatar-layer";
   frame.appendChild(baseImg);
 
-  selectedProps.forEach((propId) => {
-    const prop = avatarData.props.find((item) => item.id === propId);
-    if (!prop) return;
-    const propImg = document.createElement("img");
-    propImg.src = prop.src;
-    propImg.alt = prop.label;
-    propImg.className = "avatar-layer prop-layer";
-    frame.appendChild(propImg);
-  });
+  if (selectedOverlay) {
+    const prop = avatarData.props.find((item) => item.id === selectedOverlay);
+    if (prop) {
+      const propImg = document.createElement("img");
+      propImg.src = prop.src;
+      propImg.alt = prop.label;
+      propImg.className = "avatar-layer prop-layer";
+      frame.appendChild(propImg);
+    }
+  }
 
   avatarPreview.appendChild(frame);
 }
 
-function renderOptions(container, items, isMulti) {
+function renderOptions(container, items, selectionType) {
   if (!container) return;
   container.innerHTML = "";
 
@@ -94,14 +95,10 @@ function renderOptions(container, items, isMulti) {
     button.append(img, label);
 
     button.addEventListener("click", () => {
-      if (isMulti) {
-        if (selectedProps.has(item.id)) {
-          selectedProps.delete(item.id);
-        } else {
-          selectedProps.add(item.id);
-        }
-      } else {
+      if (selectionType === "base") {
         selectedBase = item;
+      } else {
+        selectedOverlay = item.id;
       }
       updateSelectedStates();
       renderPreview();
@@ -117,7 +114,7 @@ function updateSelectedStates() {
   document.querySelectorAll(".avatar-option").forEach((option) => {
     const id = option.dataset.id;
     const isBase = avatarData?.bases?.some((base) => base.id === id);
-    const selected = isBase ? selectedBase?.id === id : selectedProps.has(id);
+    const selected = isBase ? selectedBase?.id === id : selectedOverlay === id;
     option.classList.toggle("selected", selected);
   });
 }
@@ -127,10 +124,11 @@ async function loadSettings() {
   const profile = await apiFetch("/api/user/profile");
 
   selectedBase = avatarData.bases.find((base) => base.id === profile.avatarBase) || avatarData.bases[0];
-  selectedProps = new Set(profile.avatarProps || []);
+  const overlayCandidate = Array.isArray(profile.avatarProps) ? profile.avatarProps[0] : null;
+  selectedOverlay = avatarData.props.find((prop) => prop.id === overlayCandidate)?.id || avatarData.props[0]?.id || null;
 
-  renderOptions(avatarBases, avatarData.bases, false);
-  renderOptions(avatarProps, avatarData.props, true);
+  renderOptions(avatarBases, avatarData.bases, "base");
+  renderOptions(avatarProps, avatarData.props, "overlay");
   renderPreview();
   applyTheme(profile.themePreference);
 }
@@ -141,7 +139,7 @@ saveSettings?.addEventListener("click", async () => {
     const themePreference = darkModeToggle?.checked ? "dark" : "light";
     const payload = {
       avatarBase: selectedBase?.id || null,
-      avatarProps: Array.from(selectedProps),
+      avatarProps: selectedOverlay ? [selectedOverlay] : [],
       themePreference
     };
 

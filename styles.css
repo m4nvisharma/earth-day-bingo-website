@@ -317,10 +317,9 @@ button:hover {
 .bingo-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(190px, auto));
   gap: 0.85rem;
-  height: calc(100vh - 150px);
-  min-height: 660px;
+  align-content: start;
 }
 
 .bingo-card {
@@ -331,7 +330,7 @@ button:hover {
   display: grid;
   gap: 0.75rem;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   min-height: 0;
 }
 
@@ -551,6 +550,10 @@ button.small {
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.prop-layer {
+  opacity: 0.5;
 }
 
 .avatar-options {
@@ -1071,8 +1074,7 @@ button.danger {
 
   .bingo-grid {
     gap: 1rem;
-    height: calc(100vh - 130px);
-    min-height: 720px;
+    grid-template-rows: repeat(5, minmax(200px, auto));
   }
 
   .bingo-card {

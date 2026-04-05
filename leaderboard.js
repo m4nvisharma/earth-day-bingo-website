@@ -40,13 +40,14 @@ function renderLeaderboard(users, currentUserId) {
   users.forEach((user, index) => {
     const row = document.createElement("tr");
     const baseSrc = avatarCatalog?.bases?.find((base) => base.id === user.avatarBase)?.src;
-    const propSrcs = (user.avatarProps || []).map((propId) =>
-      avatarCatalog?.props?.find((prop) => prop.id === propId)?.src
-    ).filter(Boolean);
+    const overlayId = Array.isArray(user.avatarProps) ? user.avatarProps[0] : null;
+    const overlaySrc = overlayId
+      ? avatarCatalog?.props?.find((prop) => prop.id === overlayId)?.src
+      : null;
     const avatarHtml = baseSrc
       ? `<div class="leaderboard-avatar">
           <img src="${baseSrc}" alt="" />
-          ${propSrcs.map((src) => `<img src="${src}" alt="" class="prop-layer" />`).join("")}
+          ${overlaySrc ? `<img src="${overlaySrc}" alt="" class="prop-layer" />` : ""}
         </div>`
       : "";
     row.innerHTML = `

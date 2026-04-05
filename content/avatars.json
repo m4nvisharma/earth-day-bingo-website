@@ -1,36 +1,51 @@
 {
   "bases": [
     {
+      "id": "canadian-nature",
+      "label": "Canadian Nature",
+      "src": "SVG%20Files/Canadian-Nature.svg"
+    },
+    {
+      "id": "eco-symbol",
+      "label": "Eco",
+      "src": "SVG%20Files/eco.svg"
+    },
+    {
+      "id": "pizza-slice",
+      "label": "Pizza Slice",
+      "src": "SVG%20Files/pizza-1447860.svg"
+    },
+    {
       "id": "earth-sprout",
       "label": "Earth Sprout",
-      "src": "assets/avatars/base-earth-sprout.svg"
+      "src": "SVG%20Files/base-earth-sprout.svg"
     },
     {
       "id": "forest-friend",
       "label": "Forest Friend",
-      "src": "assets/avatars/base-forest-friend.svg"
+      "src": "SVG%20Files/base-forest-friend.svg"
     },
     {
       "id": "ocean-buddy",
       "label": "Ocean Buddy",
-      "src": "assets/avatars/base-ocean-buddy.svg"
+      "src": "SVG%20Files/base-ocean-buddy.svg"
     }
   ],
   "props": [
     {
       "id": "sun-hat",
       "label": "Sun Hat",
-      "src": "assets/avatars/prop-sun-hat.svg"
+      "src": "SVG%20Files/prop-sun-hat.svg"
     },
     {
       "id": "leaf-glasses",
       "label": "Leaf Glasses",
-      "src": "assets/avatars/prop-leaf-glasses.svg"
+      "src": "SVG%20Files/prop-leaf-glasses.svg"
     },
     {
       "id": "eco-mustache",
       "label": "Eco Mustache",
-      "src": "assets/avatars/prop-eco-mustache.svg"
+      "src": "SVG%20Files/prop-eco-mustache.svg"
     }
   ]
 }

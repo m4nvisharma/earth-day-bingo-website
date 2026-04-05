@@ -362,7 +362,7 @@ app.get("/api/user/profile", authMiddleware, async (req, res) => {
 app.put("/api/user/profile", authMiddleware, async (req, res) => {
   const userId = req.user.sub;
   const { avatarBase, avatarProps, themePreference } = req.body || {};
-  const props = Array.isArray(avatarProps) ? avatarProps.slice(0, 6) : [];
+  const props = Array.isArray(avatarProps) ? avatarProps.slice(0, 1) : [];
   const theme = themePreference === "dark" ? "dark" : "light";
 
   await query(
