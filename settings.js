@@ -8,19 +8,44 @@ if (!token) {
 const avatarPreview = document.getElementById("avatarPreview");
 const avatarBases = document.getElementById("avatarBases");
 const toggleMoreAvatars = document.getElementById("toggleMoreAvatars");
-const darkModeToggle = document.getElementById("darkModeToggle");
+const themePreferenceSelect = document.getElementById("themePreference");
 const saveSettings = document.getElementById("saveSettings");
 const deleteAccount = document.getElementById("deleteAccount");
 const settingsMessage = document.getElementById("settingsMessage");
+const accountMeta = document.getElementById("accountMeta");
+const currentUsername = document.getElementById("currentUsername");
+const usernameEditor = document.getElementById("usernameEditor");
+const usernameInput = document.getElementById("usernameInput");
+const applyUsername = document.getElementById("applyUsername");
+const cancelUsername = document.getElementById("cancelUsername");
+const changeUsernameBtn = document.getElementById("changeUsernameBtn");
+const settingsLogoutBtn = document.getElementById("settingsLogoutBtn");
 
 const BASES_COLLAPSED_COUNT = 12;
+const SUPPORTED_THEMES = new Set(["light", "dark", "love"]);
 
 let avatarData = null;
 let selectedBase = null;
 let showAllBases = false;
+let selectedTheme = "light";
 
 function setMessage(text) {
   if (settingsMessage) settingsMessage.textContent = text;
+}
+
+function normalizeUsername(value) {
+  return String(value || "").trim();
+}
+
+function isValidUsername(value) {
+  return /^[a-zA-Z0-9]{4,}$/.test(value);
+}
+
+function normalizeThemePreference(value) {
+  if (typeof window.normalizeTheme === "function") {
+    return window.normalizeTheme(value);
+  }
+  return SUPPORTED_THEMES.has(value) ? value : "light";
 }
 
 function normalizeAvatarData(data) {
@@ -145,18 +170,22 @@ function createAvatarLayer(item, size, className) {
 }
 
 function applyThemePreference(theme, options = {}) {
-  const mode = theme === "dark" ? "dark" : "light";
+  const mode = normalizeThemePreference(theme);
   if (typeof window.applyTheme === "function") {
     window.applyTheme(mode, options);
   } else {
-    document.body.classList.toggle("theme-dark", mode === "dark");
+    document.body.classList.remove("theme-dark", "theme-love");
+    if (mode !== "light") {
+      document.body.classList.add(`theme-${mode}`);
+    }
     if (options.persist !== false) {
       localStorage.setItem("theme", mode);
     }
   }
-  if (darkModeToggle) {
-    darkModeToggle.checked = mode === "dark";
+  if (themePreferenceSelect) {
+    themePreferenceSelect.value = mode;
   }
+  selectedTheme = mode;
   return mode;
 }
 
@@ -200,13 +229,12 @@ function renderOptions(container, items) {
     button.type = "button";
     button.className = "avatar-option";
     button.dataset.id = item.id;
+    button.setAttribute("aria-label", item.label || "Avatar option");
+    button.title = item.label || "Avatar option";
 
     const thumb = createAvatarLayer(item, 64, "avatar-thumb");
-    const label = document.createElement("span");
-    label.textContent = item.label;
 
     if (thumb) button.appendChild(thumb);
-    button.appendChild(label);
 
     button.addEventListener("click", () => {
       selectedBase = selectedBase?.id === item.id ? null : item;
@@ -235,10 +263,15 @@ function updateSelectedStates() {
 }
 
 async function loadSettings() {
-  const rawAvatarData = await (await fetch("content/avatars.json")).json();
+  const [avatarResponse, profile, me] = await Promise.all([
+    fetch("content/avatars.json"),
+    apiFetch("/api/user/profile"),
+    apiFetch("/api/user/me")
+  ]);
+
+  const rawAvatarData = await avatarResponse.json();
   avatarData = normalizeAvatarData(rawAvatarData);
   avatarData.bases = sortAvatarBasesByName(avatarData.bases || []);
-  const profile = await apiFetch("/api/user/profile");
 
   selectedBase = resolveBase(avatarData.bases, profile.avatarBase) || avatarData.bases[0] || null;
 
@@ -246,15 +279,31 @@ async function loadSettings() {
   renderPreview();
 
   const storedTheme = localStorage.getItem("theme");
-  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
+  const hasStoredTheme = SUPPORTED_THEMES.has(storedTheme);
   const themePreference = hasStoredTheme ? storedTheme : profile.themePreference;
   applyThemePreference(themePreference, { persist: !hasStoredTheme });
+
+  if (accountMeta) {
+    accountMeta.textContent = me?.email ? `Signed in as ${me.email}` : "Signed in";
+  }
+
+  if (currentUsername) {
+    currentUsername.textContent = `Current username: ${profile.username || "Not set"}`;
+  }
+
+  if (profile.username) {
+    localStorage.setItem("username", profile.username);
+  }
+
+  if (usernameInput && profile.username) {
+    usernameInput.value = profile.username;
+  }
 }
 
 saveSettings?.addEventListener("click", async () => {
   setMessage("");
   try {
-    const themePreference = darkModeToggle?.checked ? "dark" : "light";
+    const themePreference = normalizeThemePreference(selectedTheme);
     const payload = {
       avatarBase: selectedBase?.id || null,
       avatarProps: [],
@@ -267,16 +316,17 @@ saveSettings?.addEventListener("click", async () => {
       body: JSON.stringify(payload)
     });
 
-    applyThemePreference(themePreference);
+    applyThemePreference(themePreference, { persist: true });
     setMessage("Settings saved.");
   } catch (error) {
     setMessage(error.message);
   }
 });
 
-if (darkModeToggle) {
-  darkModeToggle.addEventListener("change", () => {
-    applyThemePreference(darkModeToggle.checked ? "dark" : "light");
+if (themePreferenceSelect) {
+  themePreferenceSelect.addEventListener("change", () => {
+    selectedTheme = normalizeThemePreference(themePreferenceSelect.value);
+    applyThemePreference(selectedTheme, { persist: true });
   });
 }
 
@@ -284,6 +334,71 @@ if (toggleMoreAvatars) {
   toggleMoreAvatars.addEventListener("click", () => {
     showAllBases = !showAllBases;
     renderBaseOptions();
+  });
+}
+
+if (changeUsernameBtn && usernameEditor && usernameInput) {
+  changeUsernameBtn.addEventListener("click", () => {
+    const isHidden = usernameEditor.hidden;
+    usernameEditor.hidden = !isHidden;
+    if (isHidden) {
+      const existing = localStorage.getItem("username") || "";
+      usernameInput.value = existing;
+      usernameInput.focus();
+      setMessage("");
+    }
+  });
+}
+
+if (cancelUsername && usernameEditor) {
+  cancelUsername.addEventListener("click", () => {
+    usernameEditor.hidden = true;
+    setMessage("");
+  });
+}
+
+if (applyUsername && usernameInput) {
+  applyUsername.addEventListener("click", async () => {
+    const nextUsername = normalizeUsername(usernameInput.value);
+    if (!isValidUsername(nextUsername)) {
+      setMessage("Username must be at least 4 characters and contain only letters and numbers.");
+      return;
+    }
+
+    setMessage("");
+    try {
+      await apiFetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          avatarBase: selectedBase?.id || null,
+          avatarProps: [],
+          themePreference: normalizeThemePreference(selectedTheme),
+          username: nextUsername
+        })
+      });
+
+      localStorage.setItem("username", nextUsername);
+      if (currentUsername) {
+        currentUsername.textContent = `Current username: ${nextUsername}`;
+      }
+      if (usernameEditor) {
+        usernameEditor.hidden = true;
+      }
+      setMessage("Username updated.");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  });
+}
+
+if (settingsLogoutBtn) {
+  settingsLogoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("displayName");
+    localStorage.removeItem("username");
+    localStorage.removeItem("userEmail");
+    window.location.href = "index.html";
   });
 }
 

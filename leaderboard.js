@@ -11,12 +11,17 @@ const refreshLeaderboard = document.getElementById("refreshLeaderboard");
 let avatarCatalog = null;
 
 function applyThemePreference(theme, options = {}) {
-  const mode = theme === "dark" ? "dark" : "light";
+  const mode = typeof window.normalizeTheme === "function"
+    ? window.normalizeTheme(theme)
+    : (theme === "dark" || theme === "love" ? theme : "light");
   if (typeof window.applyTheme === "function") {
     window.applyTheme(mode, options);
     return mode;
   }
-  document.body.classList.toggle("theme-dark", mode === "dark");
+  document.body.classList.remove("theme-dark", "theme-love");
+  if (mode !== "light") {
+    document.body.classList.add(`theme-${mode}`);
+  }
   if (options.persist !== false) {
     localStorage.setItem("theme", mode);
   }
@@ -170,7 +175,7 @@ async function loadLeaderboard() {
   setMessage("");
   const me = await apiFetch("/api/user/me");
   const storedTheme = localStorage.getItem("theme");
-  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
+  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light" || storedTheme === "love";
   if (!hasStoredTheme && me?.themePreference) {
     applyThemePreference(me.themePreference);
   }

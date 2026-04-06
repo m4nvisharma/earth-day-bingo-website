@@ -13,14 +13,35 @@
   },
   "rules": {
     "title": "Earth Day Bingo rules",
-    "intro": "Complete eco-actions, upload proof, and collect tickets for each completed line.",
+    "intro": "Complete eco-actions, upload proof, and collect entries as lines are completed.",
     "sections": [
+      {
+        "title": "Competition timeline",
+        "bullets": [
+          "Opens: April 12, 2026 at 12:00 AM (EST)",
+          "Closes: April 22, 2026 at 11:59 PM (EST)"
+        ]
+      },
       {
         "title": "How the game works",
         "bullets": [
           "Complete a bingo tile by doing the action and uploading a photo proof.",
-          "Each completed row, column, or diagonal counts as one raffle ticket.",
-          "You can keep completing tiles to earn more tickets."
+          "Each completed row, column, or diagonal counts as one completed line.",
+          "You can keep completing tiles and lines as the event continues."
+        ]
+      },
+      {
+        "title": "Volunteer credit and bonus entries",
+        "paragraphs": [
+          "Take on the challenge and make every action count. Each time you complete a row on your Earth Day Bingo board, you will earn one hour of volunteer credit, so the more you participate, the more you give back. Speed also has its rewards, and being among the first can give you a strong advantage. Every completed row increases your chances of winning, so plan strategically and see how many you can finish before time runs out.",
+          "You will receive one volunteer hour for every row completed.",
+          "The first person to complete a line receives 5 entries, the second person receives 3 entries, and each additional completed line by any participant earns 1 entry for a chance to win one of four $25 Uber Eats gift cards."
+        ],
+        "bullets": [
+          "1st place line completion: 5 entries",
+          "2nd place line completion: 3 entries",
+          "All additional completed lines (any participant): 1 entry each",
+          "All entries are entered into a draw where four winners each receive a $25 Uber Eats gift card"
         ]
       },
       {
@@ -44,6 +65,18 @@
         "bullets": [
           "By participating, you consent to CYCAT using submitted photos for program highlights.",
           "Your uploads are required for completing tiles."
+        ]
+      },
+      {
+        "title": "Volunteer hours information (placeholder)",
+        "paragraphs": [
+          "Detailed volunteer-hour verification requirements will be posted here."
+        ]
+      },
+      {
+        "title": "Prize details (placeholder)",
+        "paragraphs": [
+          "Additional prize details will be posted here."
         ]
       }
     ]

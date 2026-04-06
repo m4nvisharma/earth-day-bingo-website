@@ -61,6 +61,17 @@ export async function ensureSchema() {
   `);
 
   await query(`
+    CREATE TABLE IF NOT EXISTS line_completions (
+      id BIGSERIAL PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      line_key TEXT NOT NULL,
+      line_label TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (user_id, line_key)
+    );
+  `);
+
+  await query(`
     CREATE TABLE IF NOT EXISTS password_resets (
       id UUID PRIMARY KEY,
       user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

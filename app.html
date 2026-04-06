@@ -89,11 +89,35 @@
                 <th>Lines</th>
                 <th>Tiles</th>
                 <th>Photo tiles</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="adminTableBody"></tbody>
           </table>
         </div>
+        <section class="admin-log">
+          <div class="admin-log-header">
+            <div>
+              <h3>Row completion order</h3>
+              <p class="lede">Chronological order of completed rows, columns, and diagonals.</p>
+            </div>
+            <p class="admin-log-count">Total line completions: <strong id="adminLineCount">0</strong></p>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table admin-line-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>User</th>
+                  <th>Line</th>
+                  <th>Entries</th>
+                  <th>Completed at</th>
+                </tr>
+              </thead>
+              <tbody id="adminLineTableBody"></tbody>
+            </table>
+          </div>
+        </section>
       </section>
     </main>
 

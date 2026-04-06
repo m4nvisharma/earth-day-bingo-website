@@ -51,10 +51,33 @@
           </div>
           <div>
             <h3>Theme</h3>
-            <label class="toggle-row">
-              <span>Dark mode</span>
-              <input type="checkbox" id="darkModeToggle" />
+            <label>
+              Color theme
+              <select id="themePreference" class="theme-select">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="love">Love</option>
+              </select>
             </label>
+          </div>
+          <div>
+            <h3>Account</h3>
+            <p id="accountMeta" class="input-help"></p>
+            <p id="currentUsername" class="settings-username"></p>
+            <div id="usernameEditor" class="username-editor" hidden>
+              <label>
+                New username
+                <input type="text" id="usernameInput" minlength="4" placeholder="letters and numbers only" />
+              </label>
+              <div class="inline-actions">
+                <button id="applyUsername" type="button" class="primary small-inline">Apply</button>
+                <button id="cancelUsername" type="button" class="ghost small-inline">Cancel</button>
+              </div>
+            </div>
+            <div class="settings-actions">
+              <button id="changeUsernameBtn" type="button" class="ghost">Change username</button>
+              <button id="settingsLogoutBtn" type="button" class="ghost">Log out</button>
+            </div>
           </div>
         </div>
 
@@ -69,7 +92,9 @@
       <section class="page-card danger-card">
         <h2>Delete account</h2>
         <p class="lede">This permanently removes your account and all uploaded data.</p>
-        <button id="deleteAccount" class="ghost danger">Delete account</button>
+        <div class="danger-action-row">
+          <button id="deleteAccount" class="ghost danger">Delete account</button>
+        </div>
         <p id="settingsMessage" class="auth-message" aria-live="polite"></p>
       </section>
     </main>
