@@ -1331,6 +1331,9 @@ a:focus-visible {
   padding: 0.75rem 0.9rem;
   border-radius: 12px;
   font-size: 1rem;
+  cursor: pointer;
+  pointer-events: auto;
+  appearance: auto;
 }
 
 .settings-username {

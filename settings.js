@@ -352,10 +352,13 @@ saveSettings?.addEventListener("click", async () => {
 });
 
 if (themePreferenceSelect) {
-  themePreferenceSelect.addEventListener("change", () => {
+  const handleThemeChange = () => {
     selectedTheme = normalizeThemePreference(themePreferenceSelect.value);
     applyThemePreference(selectedTheme, { persist: true });
-  });
+  };
+  themePreferenceSelect.disabled = false;
+  themePreferenceSelect.addEventListener("change", handleThemeChange);
+  themePreferenceSelect.addEventListener("input", handleThemeChange);
 }
 
 if (toggleMoreAvatars) {
