@@ -8,14 +8,18 @@ if (!token) {
 const avatarPreview = document.getElementById("avatarPreview");
 const avatarBases = document.getElementById("avatarBases");
 const avatarProps = document.getElementById("avatarProps");
+const toggleMoreAvatars = document.getElementById("toggleMoreAvatars");
 const darkModeToggle = document.getElementById("darkModeToggle");
 const saveSettings = document.getElementById("saveSettings");
 const deleteAccount = document.getElementById("deleteAccount");
 const settingsMessage = document.getElementById("settingsMessage");
 
+const BASES_COLLAPSED_COUNT = 12;
+
 let avatarData = null;
 let selectedBase = null;
 let selectedOverlay = null;
+let showAllBases = false;
 
 function setMessage(text) {
   if (settingsMessage) settingsMessage.textContent = text;
@@ -76,6 +80,45 @@ function resolveBase(bases, baseId) {
   return bases.find((base) => base.id === baseId)
     || bases.find((base) => base.spriteParentId === baseId)
     || null;
+}
+
+function getAvatarFileName(src) {
+  if (typeof src !== "string") return "";
+  const segments = src.split("/");
+  const fileName = segments[segments.length - 1] || "";
+  return decodeURIComponent(fileName).toLowerCase();
+}
+
+function sortAvatarBasesByName(bases) {
+  return [...bases].sort((a, b) => getAvatarFileName(a.src).localeCompare(getAvatarFileName(b.src), undefined, {
+    numeric: true,
+    sensitivity: "base"
+  }));
+}
+
+function getVisibleBases() {
+  if (!avatarData || !Array.isArray(avatarData.bases)) return [];
+
+  if (showAllBases || avatarData.bases.length <= BASES_COLLAPSED_COUNT) {
+    return avatarData.bases;
+  }
+
+  const visible = avatarData.bases.slice(0, BASES_COLLAPSED_COUNT);
+  if (visible.length > 0 && selectedBase && !visible.some((base) => base.id === selectedBase.id)) {
+    visible[visible.length - 1] = selectedBase;
+  }
+  return visible;
+}
+
+function updateMoreAvatarsToggle() {
+  if (!toggleMoreAvatars) return;
+
+  const hasOverflow = (avatarData?.bases?.length || 0) > BASES_COLLAPSED_COUNT;
+  toggleMoreAvatars.hidden = !hasOverflow;
+  if (!hasOverflow) return;
+
+  toggleMoreAvatars.textContent = showAllBases ? "Show fewer avatars" : "More avatars";
+  toggleMoreAvatars.setAttribute("aria-expanded", showAllBases ? "true" : "false");
 }
 
 function createAvatarLayer(item, size, className) {
@@ -194,6 +237,11 @@ function renderOptions(container, items, selectionType) {
   updateSelectedStates();
 }
 
+function renderBaseOptions() {
+  renderOptions(avatarBases, getVisibleBases(), "base");
+  updateMoreAvatarsToggle();
+}
+
 function updateSelectedStates() {
   if (!avatarData) return;
   document.querySelectorAll(".avatar-option").forEach((option) => {
@@ -207,13 +255,14 @@ function updateSelectedStates() {
 async function loadSettings() {
   const rawAvatarData = await (await fetch("content/avatars.json")).json();
   avatarData = normalizeAvatarData(rawAvatarData);
+  avatarData.bases = sortAvatarBasesByName(avatarData.bases || []);
   const profile = await apiFetch("/api/user/profile");
 
   selectedBase = resolveBase(avatarData.bases, profile.avatarBase) || avatarData.bases[0] || null;
   const overlayCandidate = Array.isArray(profile.avatarProps) ? profile.avatarProps[0] : null;
   selectedOverlay = avatarData.props.find((prop) => prop.id === overlayCandidate)?.id || null;
 
-  renderOptions(avatarBases, avatarData.bases, "base");
+  renderBaseOptions();
   renderOptions(avatarProps, avatarData.props, "overlay");
   renderPreview();
 
@@ -249,6 +298,13 @@ saveSettings?.addEventListener("click", async () => {
 if (darkModeToggle) {
   darkModeToggle.addEventListener("change", () => {
     applyThemePreference(darkModeToggle.checked ? "dark" : "light");
+  });
+}
+
+if (toggleMoreAvatars) {
+  toggleMoreAvatars.addEventListener("click", () => {
+    showAllBases = !showAllBases;
+    renderBaseOptions();
   });
 }
 

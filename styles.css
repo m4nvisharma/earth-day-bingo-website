@@ -594,6 +594,10 @@ button.small {
   margin-bottom: 0.25rem;
 }
 
+.avatar-more-toggle {
+  margin-top: 0.75rem;
+}
+
 .toggle-row {
   display: flex;
   align-items: center;
