@@ -1,5 +1,5 @@
 const API_BASE = window.API_BASE || "https://your-backend.onrender.com";
-const token = localStorage.getItem("token");
+const token = getStoredValue("token");
 
 if (!token) {
   window.location.href = "index.html";
@@ -179,7 +179,7 @@ function applyThemePreference(theme, options = {}) {
       document.body.classList.add(`theme-${mode}`);
     }
     if (options.persist !== false) {
-      localStorage.setItem("theme", mode);
+      setStoredValue("theme", mode);
     }
   }
   if (themePreferenceSelect) {
@@ -304,22 +304,22 @@ async function loadSettings() {
     renderPreview();
   }
 
-  const storedTheme = localStorage.getItem("theme");
+  const storedTheme = getStoredValue("theme");
   const hasStoredTheme = SUPPORTED_THEMES.has(storedTheme);
   const themePreference = hasStoredTheme ? storedTheme : (profile?.themePreference || "light");
   applyThemePreference(themePreference, { persist: !hasStoredTheme });
 
   if (accountMeta) {
-    const email = me?.email || localStorage.getItem("userEmail") || "";
+    const email = me?.email || getStoredValue("userEmail") || "";
     accountMeta.textContent = email ? `Signed in as ${email}` : "Signed in";
   }
 
   if (profile?.username) {
-    localStorage.setItem("username", profile.username);
+    setStoredValue("username", profile.username);
   }
 
   if (currentUsername) {
-    const displayUsername = profile?.username || localStorage.getItem("username") || "Not set";
+    const displayUsername = profile?.username || getStoredValue("username") || "Not set";
     currentUsername.textContent = `Current username: ${displayUsername}`;
   }
 
@@ -381,7 +381,7 @@ if (changeUsernameBtn && usernameEditor && usernameInput) {
     const isHidden = usernameEditor.hidden;
     usernameEditor.hidden = !isHidden;
     if (isHidden) {
-      const existing = localStorage.getItem("username") || "";
+      const existing = getStoredValue("username") || "";
       usernameInput.value = existing;
       usernameInput.focus();
       setMessage("");
@@ -417,7 +417,7 @@ if (applyUsername && usernameInput) {
         })
       });
 
-      localStorage.setItem("username", nextUsername);
+      setStoredValue("username", nextUsername);
       if (currentUsername) {
         currentUsername.textContent = `Current username: ${nextUsername}`;
       }
@@ -433,10 +433,10 @@ if (applyUsername && usernameInput) {
 
 if (settingsLogoutBtn) {
   settingsLogoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("displayName");
-    localStorage.removeItem("username");
-    localStorage.removeItem("userEmail");
+    removeStoredValue("token");
+    removeStoredValue("displayName");
+    removeStoredValue("username");
+    removeStoredValue("userEmail");
     window.location.href = "index.html";
   });
 }
@@ -451,11 +451,11 @@ if (deleteAccount) {
 
     try {
       await apiFetch("/api/user", { method: "DELETE" });
-      localStorage.removeItem("token");
-      localStorage.removeItem("displayName");
-      localStorage.removeItem("username");
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("theme");
+      removeStoredValue("token");
+      removeStoredValue("displayName");
+      removeStoredValue("username");
+      removeStoredValue("userEmail");
+      removeStoredValue("theme");
       window.location.href = "index.html";
     } catch (error) {
       setMessage(error.message);

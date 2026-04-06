@@ -2,6 +2,22 @@ const THEME_KEY = "theme";
 
 const SUPPORTED_THEMES = ["light", "dark", "love"];
 
+function safeGetItem(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+}
+
+function safeSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    // Ignore storage failures (private browsing or disabled storage).
+  }
+}
+
 function normalizeTheme(value) {
   return SUPPORTED_THEMES.includes(value) ? value : "light";
 }
@@ -14,18 +30,18 @@ function applyTheme(theme, options = {}) {
   }
   document.body.dataset.theme = mode;
   if (options.persist !== false) {
-    localStorage.setItem(THEME_KEY, mode);
+    safeSetItem(THEME_KEY, mode);
   }
   return mode;
 }
 
-const initialTheme = localStorage.getItem(THEME_KEY);
+const initialTheme = safeGetItem(THEME_KEY);
 applyTheme(initialTheme, { persist: false });
 window.applyTheme = applyTheme;
 window.normalizeTheme = normalizeTheme;
 
 if (!SUPPORTED_THEMES.includes(initialTheme)) {
-  const token = localStorage.getItem("token");
+  const token = safeGetItem("token");
   const apiBase = window.API_BASE;
   if (token && apiBase) {
     fetch(`${apiBase}/api/user/me`, {
