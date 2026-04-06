@@ -22,7 +22,7 @@
         </div>
         <p class="eyebrow">Earth Day Bingo</p>
         <h1>Settings</h1>
-        <p class="lede">Profile, appearance, and account preferences.</p>
+        <p class="lede">Update your profile, avatar, and theme preferences.</p>
       </div>
       <nav class="app-nav" aria-label="Primary">
         <a href="rules.html">Rules</a>
@@ -34,59 +34,54 @@
     </header>
 
     <main class="page-main">
-      <section class="page-card settings-card">
+      <section class="page-card settings-panel">
         <div class="settings-header">
           <div>
             <h2>Profile and appearance</h2>
-            <p class="lede">Choose an avatar image and a theme for your account.</p>
+            <p class="lede">Choose your theme, avatar, and username.</p>
           </div>
           <button id="saveSettings" class="primary">Save changes</button>
         </div>
 
-        <div class="settings-grid">
-          <div>
-            <h3>Avatar preview</h3>
-            <div id="avatarPreview" class="avatar-preview"></div>
-            <p class="input-help">Your avatar appears on the leaderboard.</p>
-          </div>
-          <div>
-            <h3>Theme</h3>
-            <label>
-              Color theme
-              <select id="themePreference" class="theme-select">
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="love">Love</option>
-              </select>
-            </label>
-          </div>
-          <div>
-            <h3>Account</h3>
-            <p id="accountMeta" class="input-help"></p>
-            <p id="currentUsername" class="settings-username"></p>
-            <div id="usernameEditor" class="username-editor" hidden>
-              <label>
-                New username
-                <input type="text" id="usernameInput" minlength="4" placeholder="letters and numbers only" />
-              </label>
-              <div class="inline-actions">
-                <button id="applyUsername" type="button" class="primary small-inline">Apply</button>
-                <button id="cancelUsername" type="button" class="ghost small-inline">Cancel</button>
-              </div>
-            </div>
-            <div class="settings-actions">
-              <button id="changeUsernameBtn" type="button" class="ghost">Change username</button>
-              <button id="settingsLogoutBtn" type="button" class="ghost">Log out</button>
-            </div>
-          </div>
-        </div>
+        <p id="settingsMessage" class="auth-message" aria-live="polite"></p>
 
-        <div class="avatar-section">
-          <h3>Main image</h3>
-          <p class="input-help">Pick the main image that anchors your avatar.</p>
-          <div id="avatarBases" class="avatar-options"></div>
-          <button id="toggleMoreAvatars" type="button" class="ghost avatar-more-toggle" hidden aria-expanded="false">More avatars</button>
-        </div>
+        <section class="settings-section">
+          <h3>Theme</h3>
+          <label class="settings-row">
+            Color theme
+            <select id="themeSelect" class="theme-select">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="love">Love</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="settings-section">
+          <h3>Avatar</h3>
+          <div id="avatarPreview" class="avatar-preview"></div>
+          <div id="avatarGrid" class="avatar-grid"></div>
+          <button id="toggleAvatars" type="button" class="ghost small-inline">Show all avatars</button>
+        </section>
+
+        <section class="settings-section">
+          <h3>Account</h3>
+          <p id="accountMeta" class="input-help"></p>
+          <label class="settings-row">
+            Username
+            <input
+              id="usernameInput"
+              type="text"
+              minlength="4"
+              placeholder="letters and numbers only"
+              autocomplete="nickname"
+            />
+          </label>
+          <div class="settings-actions">
+            <button id="updateUsername" type="button" class="ghost">Update username</button>
+            <button id="logoutBtn" type="button" class="ghost">Log out</button>
+          </div>
+        </section>
       </section>
 
       <section class="page-card danger-card">
@@ -95,12 +90,11 @@
         <div class="danger-action-row">
           <button id="deleteAccount" class="ghost danger">Delete account</button>
         </div>
-        <p id="settingsMessage" class="auth-message" aria-live="polite"></p>
       </section>
     </main>
 
     <script src="config.js?v=20260329"></script>
-    <script src="theme.js?v=20260405b"></script>
-    <script src="settings.js?v=20260405b"></script>
+    <script src="theme.js?v=20260405c"></script>
+    <script src="settings.js?v=20260405c"></script>
   </body>
 </html>
