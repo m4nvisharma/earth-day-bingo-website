@@ -557,7 +557,7 @@ button.small {
 }
 
 .prop-layer {
-  opacity: 0.5;
+  opacity: 0.8;
 }
 
 .avatar-options {
@@ -708,6 +708,11 @@ button.danger {
 
 .theme-dark .certificate-border {
   background: #202922;
+}
+
+.theme-dark .leaderboard-table tr.current-user {
+  background: #2c4738;
+  color: #f5f4ee;
 }
 
 .rules-content h2 {

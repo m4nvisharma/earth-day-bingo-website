@@ -2,40 +2,28 @@
   "bases": [
     {
       "id": "canadian-nature",
-      "label": "Canadian Nature",
-      "src": "SVG%20Files/Canadian-Nature.svg"
-    },
-    {
-      "id": "eco-symbol",
-      "label": "Eco",
-      "src": "SVG%20Files/eco.svg",
-      "spriteSheet": {
-        "rows": 5,
-        "cols": 5,
-        "sheetWidth": 2332.7,
-        "sheetHeight": 2367.6,
-        "labelPrefix": "Eco"
-      }
+      "label": "Default Avatar",
+      "src": "SVG%20Files/avatar-default-svgrepo-com.svg"
     },
     {
       "id": "pizza-slice",
-      "label": "Pizza Slice",
-      "src": "SVG%20Files/pizza-1447860.svg"
+      "label": "Boy Avatar",
+      "src": "SVG%20Files/avatar-boy-svgrepo-com.svg"
     },
     {
       "id": "earth-sprout",
-      "label": "Earth Sprout",
-      "src": "SVG%20Files/base-earth-sprout.svg"
+      "label": "Girl Avatar",
+      "src": "SVG%20Files/avatar-girl-svgrepo-com.svg"
     },
     {
       "id": "forest-friend",
-      "label": "Forest Friend",
-      "src": "SVG%20Files/base-forest-friend.svg"
+      "label": "Portrait Avatar",
+      "src": "SVG%20Files/avatar-portrait-svgrepo-com.svg"
     },
     {
       "id": "ocean-buddy",
-      "label": "Ocean Buddy",
-      "src": "SVG%20Files/base-ocean-buddy.svg"
+      "label": "Magician Avatar",
+      "src": "SVG%20Files/avatar-circus-magician-svgrepo-com.svg"
     }
   ],
   "props": [
@@ -51,8 +39,8 @@
     },
     {
       "id": "eco-mustache",
-      "label": "Eco Mustache",
-      "src": "SVG%20Files/prop-eco-mustache.svg"
+      "label": "Acorn",
+      "src": "SVG%20Files/acorn-svgrepo-com.svg"
     }
   ]
 }
