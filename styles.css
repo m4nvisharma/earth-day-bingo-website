@@ -1317,6 +1317,8 @@ a:focus-visible {
   min-height: 90px;
   display: grid;
   place-items: center;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .avatar-option.selected {

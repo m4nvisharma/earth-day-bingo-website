@@ -220,6 +220,15 @@ function renderPreview() {
   avatarPreview.appendChild(frame);
 }
 
+function selectAvatarById(baseId) {
+  if (!avatarData?.bases?.length || !baseId) return;
+  const next = resolveBase(avatarData.bases, baseId);
+  if (!next) return;
+  selectedBase = next;
+  updateSelectedStates();
+  renderPreview();
+}
+
 function renderOptions(container, items) {
   if (!container) return;
   container.innerHTML = "";
@@ -235,12 +244,6 @@ function renderOptions(container, items) {
     const thumb = createAvatarLayer(item, 64, "avatar-thumb");
 
     if (thumb) button.appendChild(thumb);
-
-    button.addEventListener("click", () => {
-      selectedBase = selectedBase?.id === item.id ? null : item;
-      updateSelectedStates();
-      renderPreview();
-    });
 
     container.appendChild(button);
   });
@@ -259,6 +262,7 @@ function updateSelectedStates() {
     const id = option.dataset.id;
     const selected = selectedBase?.id === id;
     option.classList.toggle("selected", selected);
+    option.setAttribute("aria-pressed", selected ? "true" : "false");
   });
 }
 
@@ -358,6 +362,14 @@ if (toggleMoreAvatars) {
   toggleMoreAvatars.addEventListener("click", () => {
     showAllBases = !showAllBases;
     renderBaseOptions();
+  });
+}
+
+if (avatarBases) {
+  avatarBases.addEventListener("click", (event) => {
+    const button = event.target.closest(".avatar-option");
+    if (!button || !avatarBases.contains(button)) return;
+    selectAvatarById(button.dataset.id);
   });
 }
 
