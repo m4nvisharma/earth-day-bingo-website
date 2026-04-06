@@ -25,7 +25,7 @@ function applyThemePreference(theme, options = {}) {
 
 function normalizeAvatarData(data) {
   if (!data || !Array.isArray(data.bases)) {
-    return { bases: [], props: data?.props || [] };
+    return { bases: [] };
   }
 
   const bases = [];
@@ -70,7 +70,7 @@ function normalizeAvatarData(data) {
     }
   });
 
-  return { ...data, bases, props: data.props || [] };
+  return { ...data, bases };
 }
 
 function resolveBase(bases, baseId) {
@@ -137,24 +137,12 @@ function renderLeaderboard(users, currentUserId) {
     userWrap.className = "leaderboard-user";
 
     const baseEntry = resolveBase(avatarCatalog?.bases || [], user.avatarBase);
-    const overlayId = Array.isArray(user.avatarProps) ? user.avatarProps[0] : null;
-    const overlayEntry = overlayId
-      ? avatarCatalog?.props?.find((prop) => prop.id === overlayId)
-      : null;
 
     if (baseEntry) {
       const avatar = document.createElement("div");
       avatar.className = "leaderboard-avatar";
       const baseLayer = createAvatarLayer(baseEntry, 42, "avatar-layer");
       if (baseLayer) avatar.appendChild(baseLayer);
-
-      if (overlayEntry) {
-        const overlayImg = document.createElement("img");
-        overlayImg.src = overlayEntry.src;
-        overlayImg.alt = "";
-        overlayImg.className = "prop-layer";
-        avatar.appendChild(overlayImg);
-      }
 
       userWrap.appendChild(avatar);
     }
@@ -194,8 +182,7 @@ async function loadLeaderboard() {
   const users = data.users || [];
   const normalized = users.map((user) => ({
     ...user,
-    avatarBase: user.avatarBase ? user.avatarBase : null,
-    avatarProps: Array.isArray(user.avatarProps) ? user.avatarProps : []
+    avatarBase: user.avatarBase ? user.avatarBase : null
   }));
   renderLeaderboard(normalized, data.currentUserId);
 }

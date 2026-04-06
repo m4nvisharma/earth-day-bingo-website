@@ -1,396 +1,262 @@
 {
     "bases":  [
                   {
-                      "id":  "acorn-svgrepo-com",
-                      "label":  "Acorn",
-                      "src":  "SVG%20Files/acorn-svgrepo-com.svg"
+                      "id":  "actor-chaplin-comedy-svgrepo-com",
+                      "label":  "Actor Chaplin Comedy",
+                      "src":  "SVG%20Files/circle-avatar-vectors/actor-chaplin-comedy-svgrepo-com.svg"
                   },
                   {
-                      "id":  "alien-space-svgrepo-com-1",
-                      "label":  "Alien Space 1",
-                      "src":  "SVG%20Files/alien-space-svgrepo-com%20(1).svg"
+                      "id":  "addicted-draw-love-svgrepo-com",
+                      "label":  "Addicted Draw Love",
+                      "src":  "SVG%20Files/circle-avatar-vectors/addicted-draw-love-svgrepo-com.svg"
                   },
                   {
-                      "id":  "alien-space-svgrepo-com",
-                      "label":  "Alien Space",
-                      "src":  "SVG%20Files/alien-space-svgrepo-com.svg"
+                      "id":  "afro-avatar-male-2-svgrepo-com",
+                      "label":  "Afro Avatar Male 2",
+                      "src":  "SVG%20Files/circle-avatar-vectors/afro-avatar-male-2-svgrepo-com.svg"
                   },
                   {
-                      "id":  "alien-svgrepo-com-1",
-                      "label":  "Alien 1",
-                      "src":  "SVG%20Files/alien-svgrepo-com%20(1).svg"
+                      "id":  "afro-avatar-male-svgrepo-com",
+                      "label":  "Afro Avatar Male",
+                      "src":  "SVG%20Files/circle-avatar-vectors/afro-avatar-male-svgrepo-com.svg"
                   },
                   {
-                      "id":  "alien-svgrepo-com-2",
-                      "label":  "Alien 2",
-                      "src":  "SVG%20Files/alien-svgrepo-com%20(2).svg"
+                      "id":  "afro-boy-child-svgrepo-com",
+                      "label":  "Afro Boy Child",
+                      "src":  "SVG%20Files/circle-avatar-vectors/afro-boy-child-svgrepo-com.svg"
                   },
                   {
-                      "id":  "alien-svgrepo-com",
-                      "label":  "Alien",
-                      "src":  "SVG%20Files/alien-svgrepo-com.svg"
+                      "id":  "afro-female-person-svgrepo-com",
+                      "label":  "Afro Female Person",
+                      "src":  "SVG%20Files/circle-avatar-vectors/afro-female-person-svgrepo-com.svg"
                   },
                   {
-                      "id":  "pizza-slice",
-                      "label":  "Avatar Boy",
-                      "src":  "SVG%20Files/avatar-boy-svgrepo-com.svg"
+                      "id":  "alien-avatar-space-svgrepo-com",
+                      "label":  "Alien Avatar Space",
+                      "src":  "SVG%20Files/circle-avatar-vectors/alien-avatar-space-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "animal-avatar-bear-svgrepo-com",
+                      "label":  "Animal Avatar Bear",
+                      "src":  "SVG%20Files/circle-avatar-vectors/animal-avatar-bear-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "animal-avatar-mutton-svgrepo-com",
+                      "label":  "Animal Avatar Mutton",
+                      "src":  "SVG%20Files/circle-avatar-vectors/animal-avatar-mutton-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "anime-away-face-svgrepo-com",
+                      "label":  "Anime Away Face",
+                      "src":  "SVG%20Files/circle-avatar-vectors/anime-away-face-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "apple-avatar-illness-svgrepo-com",
+                      "label":  "Apple Avatar Illness",
+                      "src":  "SVG%20Files/circle-avatar-vectors/apple-avatar-illness-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "artist-avatar-marilyn-svgrepo-com",
+                      "label":  "Artist Avatar Marilyn",
+                      "src":  "SVG%20Files/circle-avatar-vectors/artist-avatar-marilyn-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "avatar-avocado-food-svgrepo-com",
+                      "label":  "Avatar Avocado Food",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-avocado-food-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "avatar-bad-breaking-svgrepo-com",
+                      "label":  "Avatar Bad Breaking",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-bad-breaking-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "avatar-batman-comics-svgrepo-com",
+                      "label":  "Avatar Batman Comics",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-batman-comics-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "avatar-boy-kid-svgrepo-com",
+                      "label":  "Avatar Boy Kid",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-boy-kid-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "avatar-boy-male-svgrepo-com",
+                      "label":  "Avatar Boy Male",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-boy-male-svgrepo-com.svg"
+                  },
+                  {
+                      "id":  "avatar-bug-insect-svgrepo-com",
+                      "label":  "Avatar Bug Insect",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-bug-insect-svgrepo-com.svg"
                   },
                   {
                       "id":  "avatar-cacti-cactus-svgrepo-com",
                       "label":  "Avatar Cacti Cactus",
-                      "src":  "SVG%20Files/avatar-cacti-cactus-svgrepo-com.svg"
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-cacti-cactus-svgrepo-com.svg"
                   },
                   {
-                      "id":  "ocean-buddy",
-                      "label":  "Avatar Circus Magician",
-                      "src":  "SVG%20Files/avatar-circus-magician-svgrepo-com.svg"
+                      "id":  "avatar-child-girl-svgrepo-com",
+                      "label":  "Avatar Child Girl",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-child-girl-svgrepo-com.svg"
                   },
                   {
-                      "id":  "canadian-nature",
-                      "label":  "Avatar Default",
-                      "src":  "SVG%20Files/avatar-default-svgrepo-com.svg"
+                      "id":  "avatar-cloud-crying-svgrepo-com",
+                      "label":  "Avatar Cloud Crying",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-cloud-crying-svgrepo-com.svg"
                   },
                   {
-                      "id":  "earth-sprout",
-                      "label":  "Avatar Girl",
-                      "src":  "SVG%20Files/avatar-girl-svgrepo-com.svg"
+                      "id":  "avatar-coffee-cup-svgrepo-com",
+                      "label":  "Avatar Coffee Cup",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-coffee-cup-svgrepo-com.svg"
                   },
                   {
-                      "id":  "avatar-portrait-svgrepo-com-1",
-                      "label":  "Avatar Portrait 1",
-                      "src":  "SVG%20Files/avatar-portrait-svgrepo-com%20(1).svg"
+                      "id":  "avatar-dead-monster-svgrepo-com",
+                      "label":  "Avatar Dead Monster",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-dead-monster-svgrepo-com.svg"
                   },
                   {
-                      "id":  "forest-friend",
-                      "label":  "Avatar Portrait",
-                      "src":  "SVG%20Files/avatar-portrait-svgrepo-com.svg"
+                      "id":  "avatar-einstein-professor-svgrepo-com",
+                      "label":  "Avatar Einstein Professor",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-einstein-professor-svgrepo-com.svg"
                   },
                   {
-                      "id":  "avatar-svgrepo-com-1",
-                      "label":  "Avatar 1",
-                      "src":  "SVG%20Files/avatar-svgrepo-com%20(1).svg"
+                      "id":  "avatar-elderly-grandma-svgrepo-com",
+                      "label":  "Avatar Elderly Grandma",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-elderly-grandma-svgrepo-com.svg"
                   },
                   {
-                      "id":  "avatar-svgrepo-com-2",
-                      "label":  "Avatar 2",
-                      "src":  "SVG%20Files/avatar-svgrepo-com%20(2).svg"
+                      "id":  "avatar-female-girl-svgrepo-com",
+                      "label":  "Avatar Female Girl",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-female-girl-svgrepo-com.svg"
                   },
                   {
-                      "id":  "avatar-svgrepo-com-3",
-                      "label":  "Avatar 3",
-                      "src":  "SVG%20Files/avatar-svgrepo-com%20(3).svg"
+                      "id":  "avatar-female-portrait-2-svgrepo-com",
+                      "label":  "Avatar Female Portrait 2",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-female-portrait-2-svgrepo-com.svg"
                   },
                   {
-                      "id":  "avatar-svgrepo-com-4",
-                      "label":  "Avatar 4",
-                      "src":  "SVG%20Files/avatar-svgrepo-com%20(4).svg"
+                      "id":  "avatar-female-portrait-svgrepo-com",
+                      "label":  "Avatar Female Portrait",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-female-portrait-svgrepo-com.svg"
                   },
                   {
-                      "id":  "avatar-svgrepo-com-5",
-                      "label":  "Avatar 5",
-                      "src":  "SVG%20Files/avatar-svgrepo-com%20(5).svg"
+                      "id":  "avatar-geisha-japanese-svgrepo-com",
+                      "label":  "Avatar Geisha Japanese",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-geisha-japanese-svgrepo-com.svg"
                   },
                   {
-                      "id":  "avatar-svgrepo-com-6",
-                      "label":  "Avatar 6",
-                      "src":  "SVG%20Files/avatar-svgrepo-com%20(6).svg"
+                      "id":  "avatar-hindi-indian-svgrepo-com",
+                      "label":  "Avatar Hindi Indian",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-hindi-indian-svgrepo-com.svg"
                   },
                   {
-                      "id":  "avatar-svgrepo-com-7",
-                      "label":  "Avatar 7",
-                      "src":  "SVG%20Files/avatar-svgrepo-com%20(7).svg"
+                      "id":  "avatar-joker-squad-svgrepo-com",
+                      "label":  "Avatar Joker Squad",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-joker-squad-svgrepo-com.svg"
                   },
                   {
-                      "id":  "avatar-svgrepo-com-8",
-                      "label":  "Avatar 8",
-                      "src":  "SVG%20Files/avatar-svgrepo-com%20(8).svg"
+                      "id":  "avatar-lazybones-sloth-svgrepo-com",
+                      "label":  "Avatar Lazybones Sloth",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-lazybones-sloth-svgrepo-com.svg"
                   },
                   {
-                      "id":  "avatar-svgrepo-com",
-                      "label":  "Avatar",
-                      "src":  "SVG%20Files/avatar-svgrepo-com.svg"
+                      "id":  "avatar-male-man-svgrepo-com",
+                      "label":  "Avatar Male Man",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-male-man-svgrepo-com.svg"
                   },
                   {
-                      "id":  "barn-farm-svgrepo-com",
-                      "label":  "Barn Farm",
-                      "src":  "SVG%20Files/barn-farm-svgrepo-com.svg"
+                      "id":  "avatar-male-ozzy-svgrepo-com",
+                      "label":  "Avatar Male Ozzy",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-male-ozzy-svgrepo-com.svg"
                   },
                   {
-                      "id":  "base-earth-sprout",
-                      "label":  "Base Earth Sprout",
-                      "src":  "SVG%20Files/base-earth-sprout.svg"
+                      "id":  "avatar-male-president-svgrepo-com",
+                      "label":  "Avatar Male President",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-male-president-svgrepo-com.svg"
                   },
                   {
-                      "id":  "base-forest-friend",
-                      "label":  "Base Forest Friend",
-                      "src":  "SVG%20Files/base-forest-friend.svg"
+                      "id":  "avatar-man-muslim-svgrepo-com",
+                      "label":  "Avatar Man Muslim",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-man-muslim-svgrepo-com.svg"
                   },
                   {
-                      "id":  "base-ocean-buddy",
-                      "label":  "Base Ocean Buddy",
-                      "src":  "SVG%20Files/base-ocean-buddy.svg"
+                      "id":  "avatar-man-person-svgrepo-com",
+                      "label":  "Avatar Man Person",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-man-person-svgrepo-com.svg"
                   },
                   {
-                      "id":  "beehive-honey-svgrepo-com",
-                      "label":  "Beehive Honey",
-                      "src":  "SVG%20Files/beehive-honey-svgrepo-com.svg"
+                      "id":  "avatar-muslim-paranja-svgrepo-com",
+                      "label":  "Avatar Muslim Paranja",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-muslim-paranja-svgrepo-com.svg"
                   },
                   {
-                      "id":  "bicycle-bike-svgrepo-com",
-                      "label":  "Bicycle Bike",
-                      "src":  "SVG%20Files/bicycle-bike-svgrepo-com.svg"
+                      "id":  "avatar-nun-sister-svgrepo-com",
+                      "label":  "Avatar Nun Sister",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-nun-sister-svgrepo-com.svg"
                   },
                   {
-                      "id":  "bike-svgrepo-com",
-                      "label":  "Bike",
-                      "src":  "SVG%20Files/bike-svgrepo-com.svg"
+                      "id":  "avatar-person-pilot-svgrepo-com",
+                      "label":  "Avatar Person Pilot",
+                      "src":  "SVG%20Files/circle-avatar-vectors/avatar-person-pilot-svgrepo-com.svg"
                   },
                   {
-                      "id":  "biofuel-svgrepo-com-1",
-                      "label":  "Biofuel 1",
-                      "src":  "SVG%20Files/biofuel-svgrepo-com%20(1).svg"
+                      "id":  "baby-child-kid-svgrepo-com",
+                      "label":  "Baby Child Kid",
+                      "src":  "SVG%20Files/circle-avatar-vectors/baby-child-kid-svgrepo-com.svg"
                   },
                   {
-                      "id":  "biofuel-svgrepo-com",
-                      "label":  "Biofuel",
-                      "src":  "SVG%20Files/biofuel-svgrepo-com.svg"
+                      "id":  "beard-hipster-male-svgrepo-com",
+                      "label":  "Beard Hipster Male",
+                      "src":  "SVG%20Files/circle-avatar-vectors/beard-hipster-male-svgrepo-com.svg"
                   },
                   {
-                      "id":  "cactus-desert-hot-svgrepo-com",
-                      "label":  "Cactus Desert Hot",
-                      "src":  "SVG%20Files/cactus-desert-hot-svgrepo-com.svg"
+                      "id":  "boy-indian-kid-svgrepo-com",
+                      "label":  "Boy Indian Kid",
+                      "src":  "SVG%20Files/circle-avatar-vectors/boy-indian-kid-svgrepo-com.svg"
                   },
                   {
-                      "id":  "canadian-nature-scene",
-                      "label":  "Canadian Nature",
-                      "src":  "SVG%20Files/Canadian-Nature.svg"
+                      "id":  "builder-helmet-worker-svgrepo-com",
+                      "label":  "Builder Helmet Worker",
+                      "src":  "SVG%20Files/circle-avatar-vectors/builder-helmet-worker-svgrepo-com.svg"
                   },
                   {
-                      "id":  "earth-global-svgrepo-com",
-                      "label":  "Earth Global",
-                      "src":  "SVG%20Files/earth-global-svgrepo-com.svg"
+                      "id":  "child-girl-kid-svgrepo-com",
+                      "label":  "Child Girl Kid",
+                      "src":  "SVG%20Files/circle-avatar-vectors/child-girl-kid-svgrepo-com.svg"
                   },
                   {
-                      "id":  "earth-svgrepo-com",
-                      "label":  "Earth",
-                      "src":  "SVG%20Files/earth-svgrepo-com.svg"
+                      "id":  "christmas-clous-santa-svgrepo-com",
+                      "label":  "Christmas Clous Santa",
+                      "src":  "SVG%20Files/circle-avatar-vectors/christmas-clous-santa-svgrepo-com.svg"
                   },
                   {
-                      "id":  "electricity-power-svgrepo-com",
-                      "label":  "Electricity Power",
-                      "src":  "SVG%20Files/electricity-power-svgrepo-com.svg"
+                      "id":  "fighter-luchador-man-svgrepo-com",
+                      "label":  "Fighter Luchador Man",
+                      "src":  "SVG%20Files/circle-avatar-vectors/fighter-luchador-man-svgrepo-com.svg"
                   },
                   {
-                      "id":  "energy-saving-lamp-svgrepo-com",
-                      "label":  "Energy Saving Lamp",
-                      "src":  "SVG%20Files/energy-saving-lamp-svgrepo-com.svg"
+                      "id":  "friday-halloween-jason-svgrepo-com",
+                      "label":  "Friday Halloween Jason",
+                      "src":  "SVG%20Files/circle-avatar-vectors/friday-halloween-jason-svgrepo-com.svg"
                   },
                   {
-                      "id":  "environment-fall-forest-svgrepo-com",
-                      "label":  "Environment Fall Forest",
-                      "src":  "SVG%20Files/environment-fall-forest-svgrepo-com.svg"
+                      "id":  "indian-male-man-svgrepo-com",
+                      "label":  "Indian Male Man",
+                      "src":  "SVG%20Files/circle-avatar-vectors/indian-male-man-svgrepo-com.svg"
                   },
                   {
-                      "id":  "environment-lock-svgrepo-com",
-                      "label":  "Environment Lock",
-                      "src":  "SVG%20Files/environment-lock-svgrepo-com.svg"
+                      "id":  "indian-man-sikh-svgrepo-com",
+                      "label":  "Indian Man Sikh",
+                      "src":  "SVG%20Files/circle-avatar-vectors/indian-man-sikh-svgrepo-com.svg"
                   },
                   {
-                      "id":  "environment-sprout-svgrepo-com",
-                      "label":  "Environment Sprout",
-                      "src":  "SVG%20Files/environment-sprout-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "environment-svgrepo-com-1",
-                      "label":  "Environment 1",
-                      "src":  "SVG%20Files/environment-svgrepo-com%20(1).svg"
-                  },
-                  {
-                      "id":  "environment-svgrepo-com-2",
-                      "label":  "Environment 2",
-                      "src":  "SVG%20Files/environment-svgrepo-com%20(2).svg"
-                  },
-                  {
-                      "id":  "environment-svgrepo-com",
-                      "label":  "Environment",
-                      "src":  "SVG%20Files/environment-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "factory-svgrepo-com",
-                      "label":  "Factory",
-                      "src":  "SVG%20Files/factory-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "farm-svgrepo-com",
-                      "label":  "Farm",
-                      "src":  "SVG%20Files/farm-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "faucet-svgrepo-com",
-                      "label":  "Faucet",
-                      "src":  "SVG%20Files/faucet-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "favicon",
-                      "label":  "Favicon",
-                      "src":  "SVG%20Files/favicon.svg"
-                  },
-                  {
-                      "id":  "forest-jungle-tree-svgrepo-com",
-                      "label":  "Forest Jungle Tree",
-                      "src":  "SVG%20Files/forest-jungle-tree-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "glass-svgrepo-com",
-                      "label":  "Glass",
-                      "src":  "SVG%20Files/glass-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "grass-land-leaves-svgrepo-com",
-                      "label":  "Grass Land Leaves",
-                      "src":  "SVG%20Files/grass-land-leaves-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "health-care-svgrepo-com",
-                      "label":  "Health Care",
-                      "src":  "SVG%20Files/health-care-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "house-svgrepo-com",
-                      "label":  "House",
-                      "src":  "SVG%20Files/house-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "land-nature-rock-svgrepo-com",
-                      "label":  "Land Nature Rock",
-                      "src":  "SVG%20Files/land-nature-rock-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "leaves-svgrepo-com",
-                      "label":  "Leaves",
-                      "src":  "SVG%20Files/leaves-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "love-svgrepo-com",
-                      "label":  "Love",
-                      "src":  "SVG%20Files/love-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "pizza-1447860",
-                      "label":  "Pizza 1447860",
-                      "src":  "SVG%20Files/pizza-1447860.svg"
-                  },
-                  {
-                      "id":  "planet-earth-environment-svgrepo-com",
-                      "label":  "Planet Earth Environment",
-                      "src":  "SVG%20Files/planet-earth-environment-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "planet-earth-global-svgrepo-com",
-                      "label":  "Planet Earth Global",
-                      "src":  "SVG%20Files/planet-earth-global-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "prop-leaf-glasses",
-                      "label":  "Prop Leaf Glasses",
-                      "src":  "SVG%20Files/prop-leaf-glasses.svg"
-                  },
-                  {
-                      "id":  "prop-sun-hat",
-                      "label":  "Prop Sun Hat",
-                      "src":  "SVG%20Files/prop-sun-hat.svg"
-                  },
-                  {
-                      "id":  "rain-boots-boot-svgrepo-com",
-                      "label":  "Rain Boots Boot",
-                      "src":  "SVG%20Files/rain-boots-boot-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "recycling-bags-svgrepo-com",
-                      "label":  "Recycling Bags",
-                      "src":  "SVG%20Files/recycling-bags-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "recycling-bin-trash-svgrepo-com",
-                      "label":  "Recycling Bin Trash",
-                      "src":  "SVG%20Files/recycling-bin-trash-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "recycling-plant-svgrepo-com",
-                      "label":  "Recycling Plant",
-                      "src":  "SVG%20Files/recycling-plant-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "recycling-recycle-svgrepo-com",
-                      "label":  "Recycling Recycle",
-                      "src":  "SVG%20Files/recycling-recycle-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "recycling-svgrepo-com",
-                      "label":  "Recycling",
-                      "src":  "SVG%20Files/recycling-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "seeds-svgrepo-com",
-                      "label":  "Seeds",
-                      "src":  "SVG%20Files/seeds-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "setting-2-svgrepo-com",
-                      "label":  "Setting 2",
-                      "src":  "SVG%20Files/setting-2-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "signature-placeholder",
-                      "label":  "Signature Placeholder",
-                      "src":  "SVG%20Files/signature-placeholder.svg"
-                  },
-                  {
-                      "id":  "socket-svgrepo-com",
-                      "label":  "Socket",
-                      "src":  "SVG%20Files/socket-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "solar-energy-svgrepo-com",
-                      "label":  "Solar Energy",
-                      "src":  "SVG%20Files/solar-energy-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "sun-june-svgrepo-com",
-                      "label":  "Sun June",
-                      "src":  "SVG%20Files/sun-june-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "sunrise-svgrepo-com",
-                      "label":  "Sunrise",
-                      "src":  "SVG%20Files/sunrise-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "waste-barrel-svgrepo-com",
-                      "label":  "Waste Barrel",
-                      "src":  "SVG%20Files/waste-barrel-svgrepo-com.svg"
-                  },
-                  {
-                      "id":  "wind-mill-svgrepo-com",
-                      "label":  "Wind Mill",
-                      "src":  "SVG%20Files/wind-mill-svgrepo-com.svg"
+                      "id":  "male-man-old-svgrepo-com",
+                      "label":  "Male Man Old",
+                      "src":  "SVG%20Files/circle-avatar-vectors/male-man-old-svgrepo-com.svg"
                   }
               ],
     "props":  [
-                  {
-                      "id":  "sun-hat",
-                      "label":  "Sun Hat",
-                      "src":  "SVG%20Files/prop-sun-hat.svg"
-                  },
-                  {
-                      "id":  "leaf-glasses",
-                      "label":  "Leaf Glasses",
-                      "src":  "SVG%20Files/prop-leaf-glasses.svg"
-                  },
-                  {
-                      "id":  "eco-mustache",
-                      "label":  "Acorn",
-                      "src":  "SVG%20Files/acorn-svgrepo-com.svg"
-                  }
+
               ]
 }

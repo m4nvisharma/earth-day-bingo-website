@@ -354,15 +354,15 @@ app.get("/api/user/profile", authMiddleware, async (req, res) => {
     username: user.username,
     displayName: user.display_name,
     avatarBase: user.avatar_base,
-    avatarProps: user.avatar_props || [],
+    avatarProps: [],
     themePreference: user.theme_preference || "light"
   });
 });
 
 app.put("/api/user/profile", authMiddleware, async (req, res) => {
   const userId = req.user.sub;
-  const { avatarBase, avatarProps, themePreference } = req.body || {};
-  const props = Array.isArray(avatarProps) ? avatarProps.slice(0, 1) : [];
+  const { avatarBase, themePreference } = req.body || {};
+  const props = [];
   const theme = themePreference === "dark" ? "dark" : "light";
 
   await query(
@@ -666,7 +666,7 @@ app.get("/api/leaderboard", authMiddleware, async (req, res) => {
       linesCompleted,
       tilesCompleted,
       avatarBase: user.avatar_base,
-      avatarProps: user.avatar_props || []
+      avatarProps: []
     };
   });
 

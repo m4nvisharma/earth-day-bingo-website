@@ -7,7 +7,6 @@ if (!token) {
 
 const avatarPreview = document.getElementById("avatarPreview");
 const avatarBases = document.getElementById("avatarBases");
-const avatarProps = document.getElementById("avatarProps");
 const toggleMoreAvatars = document.getElementById("toggleMoreAvatars");
 const darkModeToggle = document.getElementById("darkModeToggle");
 const saveSettings = document.getElementById("saveSettings");
@@ -18,7 +17,6 @@ const BASES_COLLAPSED_COUNT = 12;
 
 let avatarData = null;
 let selectedBase = null;
-let selectedOverlay = null;
 let showAllBases = false;
 
 function setMessage(text) {
@@ -27,7 +25,7 @@ function setMessage(text) {
 
 function normalizeAvatarData(data) {
   if (!data || !Array.isArray(data.bases)) {
-    return { bases: [], props: data?.props || [] };
+    return { bases: [] };
   }
 
   const bases = [];
@@ -72,7 +70,7 @@ function normalizeAvatarData(data) {
     }
   });
 
-  return { ...data, bases, props: data.props || [] };
+  return { ...data, bases };
 }
 
 function resolveBase(bases, baseId) {
@@ -190,21 +188,10 @@ function renderPreview() {
   const baseLayer = createAvatarLayer(selectedBase, 120, "avatar-layer");
   if (baseLayer) frame.appendChild(baseLayer);
 
-  if (selectedOverlay) {
-    const prop = avatarData.props.find((item) => item.id === selectedOverlay);
-    if (prop) {
-      const propImg = document.createElement("img");
-      propImg.src = prop.src;
-      propImg.alt = prop.label;
-      propImg.className = "avatar-layer prop-layer";
-      frame.appendChild(propImg);
-    }
-  }
-
   avatarPreview.appendChild(frame);
 }
 
-function renderOptions(container, items, selectionType) {
+function renderOptions(container, items) {
   if (!container) return;
   container.innerHTML = "";
 
@@ -222,11 +209,7 @@ function renderOptions(container, items, selectionType) {
     button.appendChild(label);
 
     button.addEventListener("click", () => {
-      if (selectionType === "base") {
-        selectedBase = selectedBase?.id === item.id ? null : item;
-      } else {
-        selectedOverlay = selectedOverlay === item.id ? null : item.id;
-      }
+      selectedBase = selectedBase?.id === item.id ? null : item;
       updateSelectedStates();
       renderPreview();
     });
@@ -238,16 +221,15 @@ function renderOptions(container, items, selectionType) {
 }
 
 function renderBaseOptions() {
-  renderOptions(avatarBases, getVisibleBases(), "base");
+  renderOptions(avatarBases, getVisibleBases());
   updateMoreAvatarsToggle();
 }
 
 function updateSelectedStates() {
-  if (!avatarData) return;
+  if (!avatarData || !Array.isArray(avatarData.bases)) return;
   document.querySelectorAll(".avatar-option").forEach((option) => {
     const id = option.dataset.id;
-    const isBase = avatarData?.bases?.some((base) => base.id === id);
-    const selected = isBase ? selectedBase?.id === id : selectedOverlay === id;
+    const selected = selectedBase?.id === id;
     option.classList.toggle("selected", selected);
   });
 }
@@ -259,11 +241,8 @@ async function loadSettings() {
   const profile = await apiFetch("/api/user/profile");
 
   selectedBase = resolveBase(avatarData.bases, profile.avatarBase) || avatarData.bases[0] || null;
-  const overlayCandidate = Array.isArray(profile.avatarProps) ? profile.avatarProps[0] : null;
-  selectedOverlay = avatarData.props.find((prop) => prop.id === overlayCandidate)?.id || null;
 
   renderBaseOptions();
-  renderOptions(avatarProps, avatarData.props, "overlay");
   renderPreview();
 
   const storedTheme = localStorage.getItem("theme");
@@ -278,7 +257,7 @@ saveSettings?.addEventListener("click", async () => {
     const themePreference = darkModeToggle?.checked ? "dark" : "light";
     const payload = {
       avatarBase: selectedBase?.id || null,
-      avatarProps: selectedOverlay ? [selectedOverlay] : [],
+      avatarProps: [],
       themePreference
     };
 
