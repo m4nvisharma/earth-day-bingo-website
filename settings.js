@@ -263,39 +263,63 @@ function updateSelectedStates() {
 }
 
 async function loadSettings() {
-  const [avatarResponse, profile, me] = await Promise.all([
-    fetch("content/avatars.json"),
-    apiFetch("/api/user/profile"),
-    apiFetch("/api/user/me")
-  ]);
+  let profile = null;
+  let me = null;
 
-  const rawAvatarData = await avatarResponse.json();
-  avatarData = normalizeAvatarData(rawAvatarData);
-  avatarData.bases = sortAvatarBasesByName(avatarData.bases || []);
+  try {
+    profile = await apiFetch("/api/user/profile");
+  } catch (error) {
+    setMessage(error.message);
+  }
 
-  selectedBase = resolveBase(avatarData.bases, profile.avatarBase) || avatarData.bases[0] || null;
+  try {
+    me = await apiFetch("/api/user/me");
+  } catch (error) {
+    if (!settingsMessage?.textContent) {
+      setMessage(error.message);
+    }
+  }
 
-  renderBaseOptions();
-  renderPreview();
+  try {
+    const avatarResponse = await fetch("content/avatars.json");
+    if (!avatarResponse.ok) {
+      throw new Error("Unable to load avatars");
+    }
+    const rawAvatarData = await avatarResponse.json();
+    avatarData = normalizeAvatarData(rawAvatarData);
+    avatarData.bases = sortAvatarBasesByName(avatarData.bases || []);
+  } catch (error) {
+    if (!settingsMessage?.textContent) {
+      setMessage(error.message);
+    }
+  }
+
+  if (avatarData?.bases?.length) {
+    selectedBase = resolveBase(avatarData.bases, profile?.avatarBase) || avatarData.bases[0] || null;
+    renderBaseOptions();
+    renderPreview();
+  }
 
   const storedTheme = localStorage.getItem("theme");
   const hasStoredTheme = SUPPORTED_THEMES.has(storedTheme);
-  const themePreference = hasStoredTheme ? storedTheme : profile.themePreference;
+  const themePreference = hasStoredTheme ? storedTheme : (profile?.themePreference || "light");
   applyThemePreference(themePreference, { persist: !hasStoredTheme });
 
   if (accountMeta) {
-    accountMeta.textContent = me?.email ? `Signed in as ${me.email}` : "Signed in";
+    const email = me?.email || localStorage.getItem("userEmail") || "";
+    accountMeta.textContent = email ? `Signed in as ${email}` : "Signed in";
   }
 
-  if (currentUsername) {
-    currentUsername.textContent = `Current username: ${profile.username || "Not set"}`;
-  }
-
-  if (profile.username) {
+  if (profile?.username) {
     localStorage.setItem("username", profile.username);
   }
 
-  if (usernameInput && profile.username) {
+  if (currentUsername) {
+    const displayUsername = profile?.username || localStorage.getItem("username") || "Not set";
+    currentUsername.textContent = `Current username: ${displayUsername}`;
+  }
+
+  if (usernameInput && profile?.username) {
     usernameInput.value = profile.username;
   }
 }
