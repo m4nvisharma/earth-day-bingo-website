@@ -552,6 +552,10 @@ button.small {
   height: 100%;
 }
 
+.avatar-sprite {
+  background-repeat: no-repeat;
+}
+
 .prop-layer {
   opacity: 0.5;
 }
@@ -574,9 +578,11 @@ button.small {
   font-size: 0.85rem;
 }
 
-.avatar-option img {
+.avatar-option img,
+.avatar-option .avatar-thumb {
   width: 64px;
   height: 64px;
+  display: block;
 }
 
 .avatar-option.selected {

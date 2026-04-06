@@ -8,7 +8,14 @@
     {
       "id": "eco-symbol",
       "label": "Eco",
-      "src": "SVG%20Files/eco.svg"
+      "src": "SVG%20Files/eco.svg",
+      "spriteSheet": {
+        "rows": 5,
+        "cols": 5,
+        "sheetWidth": 2332.7,
+        "sheetHeight": 2367.6,
+        "labelPrefix": "Eco"
+      }
     },
     {
       "id": "pizza-slice",

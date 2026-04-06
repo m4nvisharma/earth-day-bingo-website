@@ -10,7 +10,7 @@ const leaderboardMessage = document.getElementById("leaderboardMessage");
 const refreshLeaderboard = document.getElementById("refreshLeaderboard");
 let avatarCatalog = null;
 
-function applyTheme(theme, options = {}) {
+function applyThemePreference(theme, options = {}) {
   const mode = theme === "dark" ? "dark" : "light";
   if (typeof window.applyTheme === "function") {
     window.applyTheme(mode, options);
@@ -21,6 +21,88 @@ function applyTheme(theme, options = {}) {
     localStorage.setItem("theme", mode);
   }
   return mode;
+}
+
+function normalizeAvatarData(data) {
+  if (!data || !Array.isArray(data.bases)) {
+    return { bases: [], props: data?.props || [] };
+  }
+
+  const bases = [];
+  data.bases.forEach((base) => {
+    const sheet = base.spriteSheet;
+    if (!sheet) {
+      bases.push(base);
+      return;
+    }
+
+    const rows = Math.max(1, Number(sheet.rows) || 1);
+    const cols = Math.max(1, Number(sheet.cols) || 1);
+    const sheetWidth = Number(sheet.sheetWidth) || 0;
+    const sheetHeight = Number(sheet.sheetHeight) || 0;
+    if (!sheetWidth || !sheetHeight) {
+      bases.push(base);
+      return;
+    }
+
+    const tileWidth = sheetWidth / cols;
+    const tileHeight = sheetHeight / rows;
+    const prefix = sheet.labelPrefix || base.label || base.id;
+
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const index = row * cols + col + 1;
+        bases.push({
+          id: `${base.id}-${index}`,
+          label: `${prefix} ${index}`,
+          src: base.src,
+          spriteParentId: base.id,
+          sprite: {
+            sheetWidth,
+            sheetHeight,
+            x: col * tileWidth,
+            y: row * tileHeight,
+            width: tileWidth,
+            height: tileHeight
+          }
+        });
+      }
+    }
+  });
+
+  return { ...data, bases, props: data.props || [] };
+}
+
+function resolveBase(bases, baseId) {
+  if (!baseId) return null;
+  return bases.find((base) => base.id === baseId)
+    || bases.find((base) => base.spriteParentId === baseId)
+    || null;
+}
+
+function createAvatarLayer(item, size, className) {
+  if (!item) return null;
+
+  if (item.sprite) {
+    const layer = document.createElement("span");
+    layer.className = `${className || ""} avatar-sprite`.trim();
+    layer.setAttribute("role", "img");
+    layer.setAttribute("aria-label", item.label || "");
+    layer.style.backgroundImage = `url(${item.src})`;
+
+    const scaleX = size / item.sprite.width;
+    const scaleY = size / item.sprite.height;
+    layer.style.backgroundSize = `${item.sprite.sheetWidth * scaleX}px ${item.sprite.sheetHeight * scaleY}px`;
+    layer.style.backgroundPosition = `${-item.sprite.x * scaleX}px ${-item.sprite.y * scaleY}px`;
+
+    return layer;
+  }
+
+  const img = document.createElement("img");
+  img.src = item.src;
+  img.alt = item.label || "";
+  if (className) img.className = className;
+  return img;
 }
 
 function setMessage(text) {
@@ -46,28 +128,49 @@ function renderLeaderboard(users, currentUserId) {
 
   users.forEach((user, index) => {
     const row = document.createElement("tr");
-    const baseSrc = avatarCatalog?.bases?.find((base) => base.id === user.avatarBase)?.src;
+
+    const rankCell = document.createElement("td");
+    rankCell.textContent = String(index + 1);
+
+    const userCell = document.createElement("td");
+    const userWrap = document.createElement("div");
+    userWrap.className = "leaderboard-user";
+
+    const baseEntry = resolveBase(avatarCatalog?.bases || [], user.avatarBase);
     const overlayId = Array.isArray(user.avatarProps) ? user.avatarProps[0] : null;
-    const overlaySrc = overlayId
-      ? avatarCatalog?.props?.find((prop) => prop.id === overlayId)?.src
+    const overlayEntry = overlayId
+      ? avatarCatalog?.props?.find((prop) => prop.id === overlayId)
       : null;
-    const avatarHtml = baseSrc
-      ? `<div class="leaderboard-avatar">
-          <img src="${baseSrc}" alt="" />
-          ${overlaySrc ? `<img src="${overlaySrc}" alt="" class="prop-layer" />` : ""}
-        </div>`
-      : "";
-    row.innerHTML = `
-      <td>${index + 1}</td>
-      <td>
-        <div class="leaderboard-user">
-          ${avatarHtml}
-          <span>${user.username || "Player"}</span>
-        </div>
-      </td>
-      <td>${user.linesCompleted}</td>
-      <td>${user.tilesCompleted}</td>
-    `;
+
+    if (baseEntry) {
+      const avatar = document.createElement("div");
+      avatar.className = "leaderboard-avatar";
+      const baseLayer = createAvatarLayer(baseEntry, 42, "avatar-layer");
+      if (baseLayer) avatar.appendChild(baseLayer);
+
+      if (overlayEntry) {
+        const overlayImg = document.createElement("img");
+        overlayImg.src = overlayEntry.src;
+        overlayImg.alt = "";
+        overlayImg.className = "prop-layer";
+        avatar.appendChild(overlayImg);
+      }
+
+      userWrap.appendChild(avatar);
+    }
+
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = user.username || "Player";
+    userWrap.appendChild(nameSpan);
+    userCell.appendChild(userWrap);
+
+    const linesCell = document.createElement("td");
+    linesCell.textContent = String(user.linesCompleted);
+
+    const tilesCell = document.createElement("td");
+    tilesCell.textContent = String(user.tilesCompleted);
+
+    row.append(rankCell, userCell, linesCell, tilesCell);
     if (user.id === currentUserId) {
       row.classList.add("current-user");
     }
@@ -81,10 +184,11 @@ async function loadLeaderboard() {
   const storedTheme = localStorage.getItem("theme");
   const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
   if (!hasStoredTheme && me?.themePreference) {
-    applyTheme(me.themePreference);
+    applyThemePreference(me.themePreference);
   }
   if (!avatarCatalog) {
-    avatarCatalog = await (await fetch("content/avatars.json")).json();
+    const raw = await (await fetch("content/avatars.json")).json();
+    avatarCatalog = normalizeAvatarData(raw);
   }
   const data = await apiFetch("/api/leaderboard");
   const users = data.users || [];

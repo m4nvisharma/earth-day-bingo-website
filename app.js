@@ -45,7 +45,7 @@ let lastLineCount = 0;
 let hasLoadedLines = false;
 let consentReadyAt = 0;
 
-function applyTheme(theme, options = {}) {
+function applyThemePreference(theme, options = {}) {
   const mode = theme === "dark" ? "dark" : "light";
   if (typeof window.applyTheme === "function") {
     window.applyTheme(mode, options);
@@ -345,7 +345,7 @@ async function ensureConsent() {
   const storedTheme = localStorage.getItem("theme");
   const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
   if (!hasStoredTheme && me?.themePreference) {
-    applyTheme(me.themePreference);
+    applyThemePreference(me.themePreference);
   }
   if (me?.certificateEarnedAt) {
     localStorage.setItem("certificateDate", me.certificateEarnedAt);

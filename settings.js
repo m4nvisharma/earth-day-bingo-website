@@ -21,7 +21,89 @@ function setMessage(text) {
   if (settingsMessage) settingsMessage.textContent = text;
 }
 
-function applyTheme(theme, options = {}) {
+function normalizeAvatarData(data) {
+  if (!data || !Array.isArray(data.bases)) {
+    return { bases: [], props: data?.props || [] };
+  }
+
+  const bases = [];
+  data.bases.forEach((base) => {
+    const sheet = base.spriteSheet;
+    if (!sheet) {
+      bases.push(base);
+      return;
+    }
+
+    const rows = Math.max(1, Number(sheet.rows) || 1);
+    const cols = Math.max(1, Number(sheet.cols) || 1);
+    const sheetWidth = Number(sheet.sheetWidth) || 0;
+    const sheetHeight = Number(sheet.sheetHeight) || 0;
+    if (!sheetWidth || !sheetHeight) {
+      bases.push(base);
+      return;
+    }
+
+    const tileWidth = sheetWidth / cols;
+    const tileHeight = sheetHeight / rows;
+    const prefix = sheet.labelPrefix || base.label || base.id;
+
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const index = row * cols + col + 1;
+        bases.push({
+          id: `${base.id}-${index}`,
+          label: `${prefix} ${index}`,
+          src: base.src,
+          spriteParentId: base.id,
+          sprite: {
+            sheetWidth,
+            sheetHeight,
+            x: col * tileWidth,
+            y: row * tileHeight,
+            width: tileWidth,
+            height: tileHeight
+          }
+        });
+      }
+    }
+  });
+
+  return { ...data, bases, props: data.props || [] };
+}
+
+function resolveBase(bases, baseId) {
+  if (!baseId) return null;
+  return bases.find((base) => base.id === baseId)
+    || bases.find((base) => base.spriteParentId === baseId)
+    || null;
+}
+
+function createAvatarLayer(item, size, className) {
+  if (!item) return null;
+
+  if (item.sprite) {
+    const layer = document.createElement("span");
+    layer.className = `${className || ""} avatar-sprite`.trim();
+    layer.setAttribute("role", "img");
+    layer.setAttribute("aria-label", item.label || "");
+    layer.style.backgroundImage = `url(${item.src})`;
+
+    const scaleX = size / item.sprite.width;
+    const scaleY = size / item.sprite.height;
+    layer.style.backgroundSize = `${item.sprite.sheetWidth * scaleX}px ${item.sprite.sheetHeight * scaleY}px`;
+    layer.style.backgroundPosition = `${-item.sprite.x * scaleX}px ${-item.sprite.y * scaleY}px`;
+
+    return layer;
+  }
+
+  const img = document.createElement("img");
+  img.src = item.src;
+  img.alt = item.label || "";
+  if (className) img.className = className;
+  return img;
+}
+
+function applyThemePreference(theme, options = {}) {
   const mode = theme === "dark" ? "dark" : "light";
   if (typeof window.applyTheme === "function") {
     window.applyTheme(mode, options);
@@ -62,11 +144,8 @@ function renderPreview() {
   const frame = document.createElement("div");
   frame.className = "avatar-frame";
 
-  const baseImg = document.createElement("img");
-  baseImg.src = selectedBase.src;
-  baseImg.alt = selectedBase.label;
-  baseImg.className = "avatar-layer";
-  frame.appendChild(baseImg);
+  const baseLayer = createAvatarLayer(selectedBase, 120, "avatar-layer");
+  if (baseLayer) frame.appendChild(baseLayer);
 
   if (selectedOverlay) {
     const prop = avatarData.props.find((item) => item.id === selectedOverlay);
@@ -92,20 +171,18 @@ function renderOptions(container, items, selectionType) {
     button.className = "avatar-option";
     button.dataset.id = item.id;
 
-    const img = document.createElement("img");
-    img.src = item.src;
-    img.alt = item.label;
-
+    const thumb = createAvatarLayer(item, 64, "avatar-thumb");
     const label = document.createElement("span");
     label.textContent = item.label;
 
-    button.append(img, label);
+    if (thumb) button.appendChild(thumb);
+    button.appendChild(label);
 
     button.addEventListener("click", () => {
       if (selectionType === "base") {
-        selectedBase = item;
+        selectedBase = selectedBase?.id === item.id ? null : item;
       } else {
-        selectedOverlay = item.id;
+        selectedOverlay = selectedOverlay === item.id ? null : item.id;
       }
       updateSelectedStates();
       renderPreview();
@@ -118,6 +195,7 @@ function renderOptions(container, items, selectionType) {
 }
 
 function updateSelectedStates() {
+  if (!avatarData) return;
   document.querySelectorAll(".avatar-option").forEach((option) => {
     const id = option.dataset.id;
     const isBase = avatarData?.bases?.some((base) => base.id === id);
@@ -127,12 +205,13 @@ function updateSelectedStates() {
 }
 
 async function loadSettings() {
-  avatarData = await (await fetch("content/avatars.json")).json();
+  const rawAvatarData = await (await fetch("content/avatars.json")).json();
+  avatarData = normalizeAvatarData(rawAvatarData);
   const profile = await apiFetch("/api/user/profile");
 
-  selectedBase = avatarData.bases.find((base) => base.id === profile.avatarBase) || avatarData.bases[0];
+  selectedBase = resolveBase(avatarData.bases, profile.avatarBase) || avatarData.bases[0] || null;
   const overlayCandidate = Array.isArray(profile.avatarProps) ? profile.avatarProps[0] : null;
-  selectedOverlay = avatarData.props.find((prop) => prop.id === overlayCandidate)?.id || avatarData.props[0]?.id || null;
+  selectedOverlay = avatarData.props.find((prop) => prop.id === overlayCandidate)?.id || null;
 
   renderOptions(avatarBases, avatarData.bases, "base");
   renderOptions(avatarProps, avatarData.props, "overlay");
@@ -141,7 +220,7 @@ async function loadSettings() {
   const storedTheme = localStorage.getItem("theme");
   const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
   const themePreference = hasStoredTheme ? storedTheme : profile.themePreference;
-  applyTheme(themePreference, { persist: !hasStoredTheme });
+  applyThemePreference(themePreference, { persist: !hasStoredTheme });
 }
 
 saveSettings?.addEventListener("click", async () => {
@@ -160,7 +239,7 @@ saveSettings?.addEventListener("click", async () => {
       body: JSON.stringify(payload)
     });
 
-    applyTheme(themePreference);
+    applyThemePreference(themePreference);
     setMessage("Settings saved.");
   } catch (error) {
     setMessage(error.message);
@@ -169,7 +248,7 @@ saveSettings?.addEventListener("click", async () => {
 
 if (darkModeToggle) {
   darkModeToggle.addEventListener("change", () => {
-    applyTheme(darkModeToggle.checked ? "dark" : "light");
+    applyThemePreference(darkModeToggle.checked ? "dark" : "light");
   });
 }
 
