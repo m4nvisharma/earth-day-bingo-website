@@ -213,13 +213,11 @@ function renderOptions(container, items, selectionType) {
     button.type = "button";
     button.className = "avatar-option";
     button.dataset.id = item.id;
+    button.setAttribute("aria-label", item.label || "Avatar option");
 
     const thumb = createAvatarLayer(item, 64, "avatar-thumb");
-    const label = document.createElement("span");
-    label.textContent = item.label;
 
     if (thumb) button.appendChild(thumb);
-    button.appendChild(label);
 
     button.addEventListener("click", () => {
       if (selectionType === "base") {
