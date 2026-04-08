@@ -40,22 +40,26 @@ applyTheme(initialTheme, { persist: false });
 window.applyTheme = applyTheme;
 window.normalizeTheme = normalizeTheme;
 
-if (!SUPPORTED_THEMES.includes(initialTheme)) {
+async function syncThemeFromProfile() {
   const token = safeGetItem("token");
   const apiBase = window.API_BASE;
-  if (token && apiBase) {
-    fetch(`${apiBase}/api/user/me`, {
+  if (!token || !apiBase) return;
+
+  try {
+    const response = await fetch(`${apiBase}/api/user/me`, {
       headers: { Authorization: `Bearer ${token}` }
-    })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        if (data?.themePreference) {
-          applyTheme(data.themePreference);
-        }
-      })
-      .catch(() => {});
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data?.themePreference) {
+      applyTheme(data.themePreference);
+    }
+  } catch (error) {
+    // Ignore theme sync failures.
   }
 }
+
+syncThemeFromProfile();
 
 window.addEventListener("storage", (event) => {
   if (event.key === THEME_KEY) {

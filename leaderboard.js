@@ -78,6 +78,19 @@ function normalizeAvatarData(data) {
   return { ...data, bases };
 }
 
+async function loadAvatarCatalog() {
+  if (window.AVATAR_CATALOG && typeof window.AVATAR_CATALOG === "object") {
+    return normalizeAvatarData(window.AVATAR_CATALOG);
+  }
+
+  const response = await fetch("content/avatars.json", { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error("Unable to load avatars");
+  }
+  const raw = await response.json();
+  return normalizeAvatarData(raw);
+}
+
 function resolveBase(bases, baseId) {
   if (!baseId) return null;
   return bases.find((base) => base.id === baseId)
@@ -180,8 +193,7 @@ async function loadLeaderboard() {
     applyThemePreference(me.themePreference);
   }
   if (!avatarCatalog) {
-    const raw = await (await fetch("content/avatars.json")).json();
-    avatarCatalog = normalizeAvatarData(raw);
+    avatarCatalog = await loadAvatarCatalog();
   }
   const data = await apiFetch("/api/leaderboard");
   const users = data.users || [];
