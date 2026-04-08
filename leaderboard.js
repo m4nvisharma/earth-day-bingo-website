@@ -11,17 +11,12 @@ const refreshLeaderboard = document.getElementById("refreshLeaderboard");
 let avatarCatalog = null;
 
 function applyThemePreference(theme, options = {}) {
-  const mode = typeof window.normalizeTheme === "function"
-    ? window.normalizeTheme(theme)
-    : (theme === "dark" || theme === "love" ? theme : "light");
+  const mode = theme === "dark" ? "dark" : "light";
   if (typeof window.applyTheme === "function") {
     window.applyTheme(mode, options);
     return mode;
   }
-  document.body.classList.remove("theme-dark", "theme-love");
-  if (mode !== "light") {
-    document.body.classList.add(`theme-${mode}`);
-  }
+  document.body.classList.toggle("theme-dark", mode === "dark");
   if (options.persist !== false) {
     localStorage.setItem("theme", mode);
   }
@@ -30,7 +25,7 @@ function applyThemePreference(theme, options = {}) {
 
 function normalizeAvatarData(data) {
   if (!data || !Array.isArray(data.bases)) {
-    return { bases: [] };
+    return { bases: [], props: data?.props || [] };
   }
 
   const bases = [];
@@ -75,20 +70,7 @@ function normalizeAvatarData(data) {
     }
   });
 
-  return { ...data, bases };
-}
-
-async function loadAvatarCatalog() {
-  if (window.AVATAR_CATALOG && typeof window.AVATAR_CATALOG === "object") {
-    return normalizeAvatarData(window.AVATAR_CATALOG);
-  }
-
-  const response = await fetch("content/avatars.json", { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error("Unable to load avatars");
-  }
-  const raw = await response.json();
-  return normalizeAvatarData(raw);
+  return { ...data, bases, props: data.props || [] };
 }
 
 function resolveBase(bases, baseId) {
@@ -155,12 +137,24 @@ function renderLeaderboard(users, currentUserId) {
     userWrap.className = "leaderboard-user";
 
     const baseEntry = resolveBase(avatarCatalog?.bases || [], user.avatarBase);
+    const overlayId = Array.isArray(user.avatarProps) ? user.avatarProps[0] : null;
+    const overlayEntry = overlayId
+      ? avatarCatalog?.props?.find((prop) => prop.id === overlayId)
+      : null;
 
     if (baseEntry) {
       const avatar = document.createElement("div");
       avatar.className = "leaderboard-avatar";
       const baseLayer = createAvatarLayer(baseEntry, 42, "avatar-layer");
       if (baseLayer) avatar.appendChild(baseLayer);
+
+      if (overlayEntry) {
+        const overlayImg = document.createElement("img");
+        overlayImg.src = overlayEntry.src;
+        overlayImg.alt = "";
+        overlayImg.className = "prop-layer";
+        avatar.appendChild(overlayImg);
+      }
 
       userWrap.appendChild(avatar);
     }
@@ -188,18 +182,20 @@ async function loadLeaderboard() {
   setMessage("");
   const me = await apiFetch("/api/user/me");
   const storedTheme = localStorage.getItem("theme");
-  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light" || storedTheme === "love";
+  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
   if (!hasStoredTheme && me?.themePreference) {
     applyThemePreference(me.themePreference);
   }
   if (!avatarCatalog) {
-    avatarCatalog = await loadAvatarCatalog();
+    const raw = await (await fetch("content/avatars.json")).json();
+    avatarCatalog = normalizeAvatarData(raw);
   }
   const data = await apiFetch("/api/leaderboard");
   const users = data.users || [];
   const normalized = users.map((user) => ({
     ...user,
-    avatarBase: user.avatarBase ? user.avatarBase : null
+    avatarBase: user.avatarBase ? user.avatarBase : null,
+    avatarProps: Array.isArray(user.avatarProps) ? user.avatarProps : []
   }));
   renderLeaderboard(normalized, data.currentUserId);
 }

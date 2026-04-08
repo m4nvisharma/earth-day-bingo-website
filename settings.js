@@ -1,96 +1,33 @@
 const API_BASE = window.API_BASE || "https://your-backend.onrender.com";
+const token = localStorage.getItem("token");
 
-function safeGetItem(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch (error) {
-    return null;
-  }
-}
-
-function safeSetItem(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch (error) {
-    // Ignore storage failures.
-  }
-}
-
-function safeRemoveItem(key) {
-  try {
-    localStorage.removeItem(key);
-  } catch (error) {
-    // Ignore storage failures.
-  }
-}
-
-// Check for token - redirect if not logged in
-const token = safeGetItem("token");
 if (!token) {
   window.location.href = "index.html";
 }
 
-// DOM elements - wrapped in DOMContentLoaded to ensure they exist
-let settingsMessage, saveSettings, themeSelect, avatarPreview, avatarGrid;
-let toggleAvatars, accountMeta, usernameInput, updateUsername, logoutBtn, deleteAccount;
+const avatarPreview = document.getElementById("avatarPreview");
+const avatarBases = document.getElementById("avatarBases");
+const avatarProps = document.getElementById("avatarProps");
+const toggleMoreAvatars = document.getElementById("toggleMoreAvatars");
+const darkModeToggle = document.getElementById("darkModeToggle");
+const saveSettings = document.getElementById("saveSettings");
+const deleteAccount = document.getElementById("deleteAccount");
+const settingsMessage = document.getElementById("settingsMessage");
 
-const MAX_VISIBLE_AVATARS = 24;
-const SUPPORTED_THEMES = new Set(["light", "dark", "love"]);
+const BASES_COLLAPSED_COUNT = 12;
 
 let avatarData = null;
 let selectedBase = null;
-let selectedTheme = "light";
-let showAllAvatars = false;
-let isReady = false;
+let selectedOverlay = null;
+let showAllBases = false;
 
 function setMessage(text) {
-  if (!settingsMessage) return;
-  settingsMessage.textContent = text;
-}
-
-function normalizeThemePreference(value) {
-  if (typeof window.normalizeTheme === "function") {
-    return window.normalizeTheme(value);
-  }
-  return SUPPORTED_THEMES.has(value) ? value : "light";
-}
-
-function applyThemePreference(theme, options = {}) {
-  const mode = normalizeThemePreference(theme);
-  if (typeof window.applyTheme === "function") {
-    window.applyTheme(mode, options);
-  } else {
-    document.body.classList.remove("theme-dark", "theme-love");
-    if (mode !== "light") {
-      document.body.classList.add(`theme-${mode}`);
-    }
-    if (options.persist !== false) {
-      safeSetItem("theme", mode);
-    }
-  }
-  selectedTheme = mode;
-  return mode;
-}
-
-async function apiFetch(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || "Request failed");
-  }
-  return data;
+  if (settingsMessage) settingsMessage.textContent = text;
 }
 
 function normalizeAvatarData(data) {
   if (!data || !Array.isArray(data.bases)) {
-    return { bases: [] };
+    return { bases: [], props: data?.props || [] };
   }
 
   const bases = [];
@@ -135,20 +72,7 @@ function normalizeAvatarData(data) {
     }
   });
 
-  return { ...data, bases };
-}
-
-async function loadAvatarCatalog() {
-  if (window.AVATAR_CATALOG && typeof window.AVATAR_CATALOG === "object") {
-    return normalizeAvatarData(window.AVATAR_CATALOG);
-  }
-
-  const response = await fetch("content/avatars.json", { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error("Unable to load avatars");
-  }
-  const raw = await response.json();
-  return normalizeAvatarData(raw);
+  return { ...data, bases, props: data.props || [] };
 }
 
 function resolveBase(bases, baseId) {
@@ -170,6 +94,31 @@ function sortAvatarBasesByName(bases) {
     numeric: true,
     sensitivity: "base"
   }));
+}
+
+function getVisibleBases() {
+  if (!avatarData || !Array.isArray(avatarData.bases)) return [];
+
+  if (showAllBases || avatarData.bases.length <= BASES_COLLAPSED_COUNT) {
+    return avatarData.bases;
+  }
+
+  const visible = avatarData.bases.slice(0, BASES_COLLAPSED_COUNT);
+  if (visible.length > 0 && selectedBase && !visible.some((base) => base.id === selectedBase.id)) {
+    visible[visible.length - 1] = selectedBase;
+  }
+  return visible;
+}
+
+function updateMoreAvatarsToggle() {
+  if (!toggleMoreAvatars) return;
+
+  const hasOverflow = (avatarData?.bases?.length || 0) > BASES_COLLAPSED_COUNT;
+  toggleMoreAvatars.hidden = !hasOverflow;
+  if (!hasOverflow) return;
+
+  toggleMoreAvatars.textContent = showAllBases ? "Show fewer avatars" : "More avatars";
+  toggleMoreAvatars.setAttribute("aria-expanded", showAllBases ? "true" : "false");
 }
 
 function createAvatarLayer(item, size, className) {
@@ -197,269 +146,188 @@ function createAvatarLayer(item, size, className) {
   return img;
 }
 
+function applyThemePreference(theme, options = {}) {
+  const mode = theme === "dark" ? "dark" : "light";
+  if (typeof window.applyTheme === "function") {
+    window.applyTheme(mode, options);
+  } else {
+    document.body.classList.toggle("theme-dark", mode === "dark");
+    if (options.persist !== false) {
+      localStorage.setItem("theme", mode);
+    }
+  }
+  if (darkModeToggle) {
+    darkModeToggle.checked = mode === "dark";
+  }
+  return mode;
+}
+
+async function apiFetch(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || "Request failed");
+  }
+  return data;
+}
+
 function renderPreview() {
   if (!avatarPreview) return;
   avatarPreview.innerHTML = "";
+
   if (!selectedBase) return;
 
   const frame = document.createElement("div");
   frame.className = "avatar-frame";
+
   const baseLayer = createAvatarLayer(selectedBase, 120, "avatar-layer");
   if (baseLayer) frame.appendChild(baseLayer);
+
+  if (selectedOverlay) {
+    const prop = avatarData.props.find((item) => item.id === selectedOverlay);
+    if (prop) {
+      const propImg = document.createElement("img");
+      propImg.src = prop.src;
+      propImg.alt = prop.label;
+      propImg.className = "avatar-layer prop-layer";
+      frame.appendChild(propImg);
+    }
+  }
+
   avatarPreview.appendChild(frame);
 }
 
-function getVisibleBases() {
-  if (!avatarData?.bases?.length) return [];
-  return showAllAvatars ? avatarData.bases : avatarData.bases.slice(0, MAX_VISIBLE_AVATARS);
-}
+function renderOptions(container, items, selectionType) {
+  if (!container) return;
+  container.innerHTML = "";
 
-function renderAvatarGrid() {
-  if (!avatarGrid) return;
-  avatarGrid.innerHTML = "";
-  const visibleBases = getVisibleBases();
-
-  visibleBases.forEach((item) => {
+  items.forEach((item) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "avatar-choice";
+    button.className = "avatar-option";
     button.dataset.id = item.id;
-    button.setAttribute("aria-pressed", selectedBase?.id === item.id ? "true" : "false");
-    button.setAttribute("aria-label", item.label || "Avatar option");
-    button.title = item.label || "Avatar option";
 
     const thumb = createAvatarLayer(item, 64, "avatar-thumb");
+    const label = document.createElement("span");
+    label.textContent = item.label;
+
     if (thumb) button.appendChild(thumb);
+    button.appendChild(label);
 
-    if (selectedBase?.id === item.id) {
-      button.classList.add("selected");
-    }
+    button.addEventListener("click", () => {
+      if (selectionType === "base") {
+        selectedBase = selectedBase?.id === item.id ? null : item;
+      } else {
+        selectedOverlay = selectedOverlay === item.id ? null : item.id;
+      }
+      updateSelectedStates();
+      renderPreview();
+    });
 
-    avatarGrid.appendChild(button);
+    container.appendChild(button);
   });
 
-  if (toggleAvatars) {
-    const hasOverflow = (avatarData?.bases?.length || 0) > MAX_VISIBLE_AVATARS;
-    toggleAvatars.hidden = !hasOverflow;
-    toggleAvatars.textContent = showAllAvatars ? "Show fewer avatars" : "Show all avatars";
-  }
+  updateSelectedStates();
 }
 
-function selectAvatarById(baseId) {
-  if (!avatarData?.bases?.length || !baseId) return;
-  const next = resolveBase(avatarData.bases, baseId);
-  if (!next) return;
-  selectedBase = next;
-  // Save selection to localStorage for persistence
-  safeSetItem("avatarBase", selectedBase.id);
-  renderAvatarGrid();
+function renderBaseOptions() {
+  renderOptions(avatarBases, getVisibleBases(), "base");
+  updateMoreAvatarsToggle();
+}
+
+function updateSelectedStates() {
+  if (!avatarData) return;
+  document.querySelectorAll(".avatar-option").forEach((option) => {
+    const id = option.dataset.id;
+    const isBase = avatarData?.bases?.some((base) => base.id === id);
+    const selected = isBase ? selectedBase?.id === id : selectedOverlay === id;
+    option.classList.toggle("selected", selected);
+  });
+}
+
+async function loadSettings() {
+  const rawAvatarData = await (await fetch("content/avatars.json")).json();
+  avatarData = normalizeAvatarData(rawAvatarData);
+  avatarData.bases = sortAvatarBasesByName(avatarData.bases || []);
+  const profile = await apiFetch("/api/user/profile");
+
+  selectedBase = resolveBase(avatarData.bases, profile.avatarBase) || avatarData.bases[0] || null;
+  const overlayCandidate = Array.isArray(profile.avatarProps) ? profile.avatarProps[0] : null;
+  selectedOverlay = avatarData.props.find((prop) => prop.id === overlayCandidate)?.id || null;
+
+  renderBaseOptions();
+  renderOptions(avatarProps, avatarData.props, "overlay");
   renderPreview();
+
+  const storedTheme = localStorage.getItem("theme");
+  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
+  const themePreference = hasStoredTheme ? storedTheme : profile.themePreference;
+  applyThemePreference(themePreference, { persist: !hasStoredTheme });
 }
 
-function normalizeUsername(value) {
-  return String(value || "").trim();
-}
-
-function isValidUsername(value) {
-  return /^[a-zA-Z0-9]{4,}$/.test(value);
-}
-
-async function saveProfile({ includeUsername, successMessage }) {
-  if (!selectedBase && avatarData?.bases?.length) {
-    selectedBase = avatarData.bases[0];
-  }
-
-  const payload = {
-    avatarBase: selectedBase?.id || null,
-    avatarProps: [],
-    themePreference: selectedTheme
-  };
-
-  if (includeUsername) {
-    const candidate = normalizeUsername(usernameInput?.value);
-    if (candidate) {
-      if (!isValidUsername(candidate)) {
-        setMessage("Username must be at least 4 characters and contain only letters and numbers.");
-        return false;
-      }
-      payload.username = candidate;
-    }
-  }
-
+saveSettings?.addEventListener("click", async () => {
+  setMessage("");
   try {
+    const themePreference = darkModeToggle?.checked ? "dark" : "light";
+    const payload = {
+      avatarBase: selectedBase?.id || null,
+      avatarProps: selectedOverlay ? [selectedOverlay] : [],
+      themePreference
+    };
+
     await apiFetch("/api/user/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
 
-    if (payload.username) {
-      safeSetItem("username", payload.username);
-    }
-
-    if (successMessage) {
-      setMessage(successMessage);
-    }
-    return true;
+    applyThemePreference(themePreference);
+    setMessage("Settings saved.");
   } catch (error) {
     setMessage(error.message);
-    return false;
   }
+});
+
+if (darkModeToggle) {
+  darkModeToggle.addEventListener("change", () => {
+    applyThemePreference(darkModeToggle.checked ? "dark" : "light");
+  });
 }
 
-async function loadSettings() {
-  let profile = null;
-  let me = null;
-
-  // Try to load user profile from API (might fail if offline or API unavailable)
-  try {
-    profile = await apiFetch("/api/user/profile");
-  } catch (error) {
-    // Don't show error message for profile load failure - just continue with defaults
-    console.log("Profile load skipped:", error.message);
-  }
-
-  // Try to load user info from API
-  try {
-    me = await apiFetch("/api/user/me");
-  } catch (error) {
-    // Don't show error message for me load failure - just continue with localStorage values
-    console.log("User info load skipped:", error.message);
-  }
-
-  // Initialize theme from localStorage or profile
-  const storedTheme = safeGetItem("theme");
-  selectedTheme = normalizeThemePreference(storedTheme || profile?.themePreference || "light");
-  applyThemePreference(selectedTheme, { persist: !storedTheme });
-  if (themeSelect) {
-    themeSelect.value = selectedTheme;
-  }
-
-  // Display account info
-  if (accountMeta) {
-    const email = me?.email || safeGetItem("userEmail") || "";
-    accountMeta.textContent = email ? `Signed in as ${email}` : "Signed in";
-  }
-
-  // Set username from profile or localStorage
-  if (usernameInput) {
-    usernameInput.value = profile?.username || safeGetItem("username") || "";
-  }
-
-  if (profile?.username) {
-    safeSetItem("username", profile.username);
-  }
-
-  // Load avatars - this should always work since avatars.js is included
-  try {
-    avatarData = await loadAvatarCatalog();
-    avatarData.bases = sortAvatarBasesByName(avatarData.bases || []);
-    
-    // Try to restore previously selected avatar from profile or localStorage
-    const savedAvatarId = profile?.avatarBase || safeGetItem("avatarBase");
-    selectedBase = resolveBase(avatarData.bases, savedAvatarId) || avatarData.bases[0] || null;
-    
-    renderAvatarGrid();
-    renderPreview();
-  } catch (error) {
-    setMessage("Unable to load avatars: " + error.message);
-  }
-
-  isReady = true;
+if (toggleMoreAvatars) {
+  toggleMoreAvatars.addEventListener("click", () => {
+    showAllBases = !showAllBases;
+    renderBaseOptions();
+  });
 }
 
-// Initialize the page when DOM is ready
-function initSettingsPage() {
-  // Get DOM elements
-  settingsMessage = document.getElementById("settingsMessage");
-  saveSettings = document.getElementById("saveSettings");
-  themeSelect = document.getElementById("themeSelect");
-  avatarPreview = document.getElementById("avatarPreview");
-  avatarGrid = document.getElementById("avatarGrid");
-  toggleAvatars = document.getElementById("toggleAvatars");
-  accountMeta = document.getElementById("accountMeta");
-  usernameInput = document.getElementById("usernameInput");
-  updateUsername = document.getElementById("updateUsername");
-  logoutBtn = document.getElementById("logoutBtn");
-  deleteAccount = document.getElementById("deleteAccount");
+if (deleteAccount) {
+  deleteAccount.addEventListener("click", async () => {
+    const confirmation = window.prompt("Type DELETE to permanently remove your account.");
+    if (confirmation !== "DELETE") {
+      setMessage("Account deletion cancelled.");
+      return;
+    }
 
-  // Set up event listeners
-  if (themeSelect) {
-    themeSelect.addEventListener("change", () => {
-      selectedTheme = normalizeThemePreference(themeSelect.value);
-      applyThemePreference(selectedTheme, { persist: true });
-      if (isReady && selectedBase) {
-        saveProfile({ includeUsername: false, successMessage: "Theme updated." });
-      }
-    });
-  }
-
-  if (avatarGrid) {
-    avatarGrid.addEventListener("click", (event) => {
-      const button = event.target.closest(".avatar-choice");
-      if (!button || !avatarGrid.contains(button)) return;
-      selectAvatarById(button.dataset.id);
-    });
-  }
-
-  if (toggleAvatars) {
-    toggleAvatars.addEventListener("click", () => {
-      showAllAvatars = !showAllAvatars;
-      renderAvatarGrid();
-    });
-  }
-
-  if (saveSettings) {
-    saveSettings.addEventListener("click", () => {
-      saveProfile({ includeUsername: true, successMessage: "Settings saved." });
-    });
-  }
-
-  if (updateUsername) {
-    updateUsername.addEventListener("click", () => {
-      saveProfile({ includeUsername: true, successMessage: "Username updated." });
-    });
-  }
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      safeRemoveItem("token");
-      safeRemoveItem("displayName");
-      safeRemoveItem("username");
-      safeRemoveItem("userEmail");
+    try {
+      await apiFetch("/api/user", { method: "DELETE" });
+      localStorage.removeItem("token");
+      localStorage.removeItem("displayName");
+      localStorage.removeItem("username");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("theme");
       window.location.href = "index.html";
-    });
-  }
-
-  if (deleteAccount) {
-    deleteAccount.addEventListener("click", async () => {
-      const confirmation = window.prompt("Type DELETE to permanently remove your account.");
-      if (confirmation !== "DELETE") {
-        setMessage("Account deletion cancelled.");
-        return;
-      }
-
-      try {
-        await apiFetch("/api/user", { method: "DELETE" });
-        safeRemoveItem("token");
-        safeRemoveItem("displayName");
-        safeRemoveItem("username");
-        safeRemoveItem("userEmail");
-        safeRemoveItem("theme");
-        window.location.href = "index.html";
-      } catch (error) {
-        setMessage(error.message);
-      }
-    });
-  }
-
-  // Load settings data
-  loadSettings().catch((error) => setMessage(error.message));
+    } catch (error) {
+      setMessage(error.message);
+    }
+  });
 }
 
-// Run initialization when DOM is ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initSettingsPage);
-} else {
-  initSettingsPage();
-}
+loadSettings().catch((error) => setMessage(error.message));

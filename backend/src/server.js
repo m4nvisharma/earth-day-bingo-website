@@ -196,22 +196,6 @@ function getCompletedLines(checked, size = 5) {
   return lines.filter((line) => line.indexes.every(Boolean));
 }
 
-async function recordLineCompletions(userId, lines) {
-  if (!userId || !Array.isArray(lines) || lines.length === 0) {
-    return;
-  }
-
-  for (const line of lines) {
-    await query(
-      `INSERT INTO line_completions (user_id, line_key, line_label)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (user_id, line_key)
-       DO NOTHING`,
-      [userId, line.key, line.label]
-    );
-  }
-}
-
 function resolveImageUrl(imageUrl) {
   if (!imageUrl) return "";
   if (imageUrl.startsWith("http")) return imageUrl;
@@ -370,67 +354,27 @@ app.get("/api/user/profile", authMiddleware, async (req, res) => {
     username: user.username,
     displayName: user.display_name,
     avatarBase: user.avatar_base,
-    avatarProps: [],
+    avatarProps: user.avatar_props || [],
     themePreference: user.theme_preference || "light"
   });
 });
 
 app.put("/api/user/profile", authMiddleware, async (req, res) => {
   const userId = req.user.sub;
-  const { avatarBase, themePreference, username } = req.body || {};
-  const props = [];
-  const theme = themePreference === "dark" || themePreference === "love" ? themePreference : "light";
-
-  const { rows: currentRows } = await query(
-    `SELECT username
-     FROM users
-     WHERE id = $1`,
-    [userId]
-  );
-  if (currentRows.length === 0) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  let nextUsername = currentRows[0].username;
-  if (typeof username === "string" && username.trim().length > 0) {
-    const candidate = username.trim();
-    if (candidate !== currentRows[0].username) {
-      const usernameCheck = validateUsername(candidate);
-      if (!usernameCheck.ok) {
-        return res.status(400).json({ error: usernameCheck.reason });
-      }
-
-      const usernameExisting = await query(
-        "SELECT id FROM users WHERE username = $1 AND id <> $2",
-        [usernameCheck.username, userId]
-      );
-      if (usernameExisting.rowCount > 0) {
-        return res.status(409).json({ error: "Username already in use" });
-      }
-
-      nextUsername = usernameCheck.username;
-    }
-  }
+  const { avatarBase, avatarProps, themePreference } = req.body || {};
+  const props = Array.isArray(avatarProps) ? avatarProps.slice(0, 1) : [];
+  const theme = themePreference === "dark" ? "dark" : "light";
 
   await query(
     `UPDATE users
      SET avatar_base = $1,
          avatar_props = $2,
-         theme_preference = $3,
-         username = $4
-     WHERE id = $5`,
-    [avatarBase || null, props, theme, nextUsername, userId]
+         theme_preference = $3
+     WHERE id = $4`,
+    [avatarBase || null, props, theme, userId]
   );
 
-  return res.json({
-    ok: true,
-    user: {
-      username: nextUsername,
-      avatarBase: avatarBase || null,
-      avatarProps: [],
-      themePreference: theme
-    }
-  });
+  return res.json({ ok: true });
 });
 
 app.delete("/api/user", authMiddleware, async (req, res) => {
@@ -594,8 +538,6 @@ app.put("/api/bingo/state", authMiddleware, async (req, res) => {
   const afterLines = getCompletedLines(afterChecked);
   const newLines = afterLines.filter((line) => !beforeLines.some((prev) => prev.key === line.key));
 
-  await recordLineCompletions(userId, newLines);
-
   if (newLines.length > 0) {
     const { rows: userRows } = await query("SELECT id, email, display_name FROM users WHERE id = $1", [userId]);
     const user = userRows[0];
@@ -670,8 +612,6 @@ app.post("/api/bingo/item/:id/image", authMiddleware, upload.single("image"), as
   const afterLines = getCompletedLines(afterChecked);
   const newLines = afterLines.filter((line) => !beforeLines.some((prev) => prev.key === line.key));
 
-  await recordLineCompletions(userId, newLines);
-
   if (afterChecked.every(Boolean)) {
     await query(
       `UPDATE users
@@ -726,7 +666,7 @@ app.get("/api/leaderboard", authMiddleware, async (req, res) => {
       linesCompleted,
       tilesCompleted,
       avatarBase: user.avatar_base,
-      avatarProps: []
+      avatarProps: user.avatar_props || []
     };
   });
 
@@ -810,87 +750,6 @@ app.get("/api/admin/leaderboard", authMiddleware, async (req, res) => {
   });
 
   return res.json({ users: ranked });
-});
-
-app.get("/api/admin/line-completions", authMiddleware, async (req, res) => {
-  const requesterEmail = (req.user?.email || "").toLowerCase();
-  if (requesterEmail !== adminEmail) {
-    return res.status(403).json({ error: "Not authorized" });
-  }
-
-  const { rows } = await query(
-    `SELECT lc.id,
-            lc.user_id,
-            lc.line_key,
-            lc.line_label,
-            lc.created_at,
-            u.email,
-            u.display_name,
-            u.username
-     FROM line_completions lc
-     INNER JOIN users u ON u.id = lc.user_id
-     ORDER BY lc.id ASC`
-  );
-
-  const completions = rows.map((row, index) => ({
-    id: row.id,
-    order: index + 1,
-    userId: row.user_id,
-    email: row.email,
-    username: row.username || row.display_name,
-    lineKey: row.line_key,
-    lineLabel: row.line_label,
-    completedAt: row.created_at,
-    entriesAwarded: index === 0 ? 5 : index === 1 ? 3 : 1
-  }));
-
-  return res.json({ completions });
-});
-
-app.delete("/api/admin/users/:id", authMiddleware, async (req, res) => {
-  const requesterEmail = (req.user?.email || "").toLowerCase();
-  if (requesterEmail !== adminEmail) {
-    return res.status(403).json({ error: "Not authorized" });
-  }
-
-  const userId = req.params.id;
-  if (!userId) {
-    return res.status(400).json({ error: "Missing user id" });
-  }
-
-  if (userId === req.user.sub) {
-    return res.status(400).json({ error: "Admin account cannot delete itself" });
-  }
-
-  const { rows: userRows } = await query(
-    `SELECT id, email, display_name
-     FROM users
-     WHERE id = $1`,
-    [userId]
-  );
-  if (userRows.length === 0) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  const user = userRows[0];
-  if ((user.email || "").toLowerCase() === adminEmail) {
-    return res.status(400).json({ error: "Cannot delete the configured admin account" });
-  }
-
-  const typedEmail = String(req.body?.confirmEmail || "").trim().toLowerCase();
-  if (!typedEmail || typedEmail !== String(user.email || "").toLowerCase()) {
-    return res.status(400).json({ error: "Type the exact user email to confirm deletion" });
-  }
-
-  await query("DELETE FROM users WHERE id = $1", [userId]);
-  return res.json({
-    ok: true,
-    deletedUser: {
-      id: user.id,
-      email: user.email,
-      displayName: user.display_name
-    }
-  });
 });
 
 app.get("/api/admin/users/:id/board", authMiddleware, async (req, res) => {

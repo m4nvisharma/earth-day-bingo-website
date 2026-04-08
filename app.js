@@ -17,8 +17,6 @@ const adminTopLines = document.getElementById("adminTopLines");
 const adminTopTiles = document.getElementById("adminTopTiles");
 const adminTopPhotos = document.getElementById("adminTopPhotos");
 const refreshAdminBtn = document.getElementById("refreshAdminBtn");
-const adminLineTableBody = document.getElementById("adminLineTableBody");
-const adminLineCount = document.getElementById("adminLineCount");
 const celebration = document.getElementById("celebration");
 const celebrationTitle = document.getElementById("celebrationTitle");
 const celebrationMessage = document.getElementById("celebrationMessage");
@@ -48,17 +46,12 @@ let hasLoadedLines = false;
 let consentReadyAt = 0;
 
 function applyThemePreference(theme, options = {}) {
-  const mode = typeof window.normalizeTheme === "function"
-    ? window.normalizeTheme(theme)
-    : (theme === "dark" || theme === "love" ? theme : "light");
+  const mode = theme === "dark" ? "dark" : "light";
   if (typeof window.applyTheme === "function") {
     window.applyTheme(mode, options);
     return mode;
   }
-  document.body.classList.remove("theme-dark", "theme-love");
-  if (mode !== "light") {
-    document.body.classList.add(`theme-${mode}`);
-  }
+  document.body.classList.toggle("theme-dark", mode === "dark");
   if (options.persist !== false) {
     localStorage.setItem("theme", mode);
   }
@@ -73,19 +66,6 @@ function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
   setTimeout(() => toast.classList.remove("show"), 2200);
-}
-
-function formatDateTime(value) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
-  });
 }
 
 async function apiFetch(path, options = {}) {
@@ -363,7 +343,7 @@ async function ensureConsent() {
   if (!consentModal) return;
   const me = await apiFetch("/api/user/me");
   const storedTheme = localStorage.getItem("theme");
-  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light" || storedTheme === "love";
+  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
   if (!hasStoredTheme && me?.themePreference) {
     applyThemePreference(me.themePreference);
   }
@@ -446,61 +426,11 @@ async function loadLeaderboard() {
       <td>${user.linesCompleted}</td>
       <td>${user.tilesCompleted}</td>
       <td>${user.photoTiles}</td>
-      <td></td>
     `;
-
-    const actionCell = row.lastElementChild;
-    if (actionCell) {
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className = "ghost small danger-action";
-      deleteBtn.textContent = "Delete";
-      deleteBtn.addEventListener("click", async (event) => {
-        event.stopPropagation();
-        const typed = window.prompt(`Type ${user.email} to permanently delete this user.`);
-        if (!typed) return;
-        try {
-          await apiFetch(`/api/admin/users/${user.id}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ confirmEmail: typed })
-          });
-          showToast(`Deleted ${user.displayName}`);
-          await Promise.all([loadLeaderboard(), loadLineCompletions()]);
-        } catch (error) {
-          showToast(error.message);
-        }
-      });
-      actionCell.appendChild(deleteBtn);
-    }
-
     row.addEventListener("click", () => {
       loadAdminDetail(user.id).catch((error) => showToast(error.message));
     });
     adminTableBody.appendChild(row);
-  });
-}
-
-async function loadLineCompletions() {
-  if (!isAdmin || !adminLineTableBody) return;
-  const data = await apiFetch("/api/admin/line-completions");
-  const completions = data.completions || [];
-
-  if (adminLineCount) {
-    adminLineCount.textContent = String(completions.length);
-  }
-
-  adminLineTableBody.innerHTML = "";
-  completions.forEach((entry) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${entry.order}</td>
-      <td>${entry.username}</td>
-      <td>${entry.lineLabel}</td>
-      <td>${entry.entriesAwarded}</td>
-      <td>${formatDateTime(entry.completedAt)}</td>
-    `;
-    adminLineTableBody.appendChild(row);
   });
 }
 
@@ -581,9 +511,9 @@ if (adminDetailClose) {
 if (isAdmin && adminPanel) {
   adminPanel.hidden = false;
   refreshAdminBtn?.addEventListener("click", () => {
-    Promise.all([loadLeaderboard(), loadLineCompletions()]).catch((error) => showToast(error.message));
+    loadLeaderboard().catch((error) => showToast(error.message));
   });
-  Promise.all([loadLeaderboard(), loadLineCompletions()]).catch((error) => showToast(error.message));
+  loadLeaderboard().catch((error) => showToast(error.message));
 } else if (adminPanel) {
   adminPanel.hidden = true;
 }

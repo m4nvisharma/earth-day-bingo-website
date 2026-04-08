@@ -12,21 +12,7 @@ if (forgotPasswordForm) {
 }
 
 function setMessage(text) {
-  if (!authMessage) return;
   authMessage.textContent = text;
-  authMessage.classList.remove("is-error", "is-success");
-  if (text) {
-    authMessage.classList.add("is-error");
-  }
-}
-
-function setSuccessMessage(text) {
-  if (!authMessage) return;
-  authMessage.textContent = text;
-  authMessage.classList.remove("is-error", "is-success");
-  if (text) {
-    authMessage.classList.add("is-success");
-  }
 }
 
 function normalizeUsername(value) {
@@ -127,7 +113,7 @@ if (forgotPasswordForm) {
       if (!response.ok) {
         throw new Error(data.error || "Something went wrong");
       }
-      setSuccessMessage("If that email exists, a reset link is on the way.");
+      setMessage("If that email exists, a reset link is on the way.");
     } catch (error) {
       setMessage(error.message);
     }

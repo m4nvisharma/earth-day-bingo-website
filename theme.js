@@ -1,65 +1,20 @@
 const THEME_KEY = "theme";
 
-const SUPPORTED_THEMES = ["light", "dark", "love"];
-
-function safeGetItem(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch (error) {
-    return null;
-  }
-}
-
-function safeSetItem(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch (error) {
-    // Ignore storage failures (private browsing or disabled storage).
-  }
-}
-
 function normalizeTheme(value) {
-  return SUPPORTED_THEMES.includes(value) ? value : "light";
+  return value === "dark" ? "dark" : "light";
 }
 
 function applyTheme(theme, options = {}) {
   const mode = normalizeTheme(theme);
-  document.body.classList.remove("theme-dark", "theme-love");
-  if (mode !== "light") {
-    document.body.classList.add(`theme-${mode}`);
-  }
-  document.body.dataset.theme = mode;
+  document.body.classList.toggle("theme-dark", mode === "dark");
   if (options.persist !== false) {
-    safeSetItem(THEME_KEY, mode);
+    localStorage.setItem(THEME_KEY, mode);
   }
   return mode;
 }
 
-const initialTheme = safeGetItem(THEME_KEY);
-applyTheme(initialTheme, { persist: false });
+applyTheme(localStorage.getItem(THEME_KEY), { persist: false });
 window.applyTheme = applyTheme;
-window.normalizeTheme = normalizeTheme;
-
-async function syncThemeFromProfile() {
-  const token = safeGetItem("token");
-  const apiBase = window.API_BASE;
-  if (!token || !apiBase) return;
-
-  try {
-    const response = await fetch(`${apiBase}/api/user/me`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!response.ok) return;
-    const data = await response.json();
-    if (data?.themePreference) {
-      applyTheme(data.themePreference);
-    }
-  } catch (error) {
-    // Ignore theme sync failures.
-  }
-}
-
-syncThemeFromProfile();
 
 window.addEventListener("storage", (event) => {
   if (event.key === THEME_KEY) {

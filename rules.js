@@ -29,14 +29,6 @@ async function loadRules() {
       heading.textContent = section.title || "";
       wrap.appendChild(heading);
 
-      if (Array.isArray(section.paragraphs) && section.paragraphs.length > 0) {
-        section.paragraphs.forEach((text) => {
-          const paragraph = document.createElement("p");
-          paragraph.textContent = text;
-          wrap.appendChild(paragraph);
-        });
-      }
-
       if (Array.isArray(section.bullets) && section.bullets.length > 0) {
         const list = document.createElement("ul");
         section.bullets.forEach((item) => {
