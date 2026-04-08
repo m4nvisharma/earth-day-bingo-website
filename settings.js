@@ -11,8 +11,13 @@ const avatarProps = document.getElementById("avatarProps");
 const toggleMoreAvatars = document.getElementById("toggleMoreAvatars");
 const darkModeToggle = document.getElementById("darkModeToggle");
 const saveSettings = document.getElementById("saveSettings");
+const logoutButton = document.getElementById("logoutButton");
 const deleteAccount = document.getElementById("deleteAccount");
 const settingsMessage = document.getElementById("settingsMessage");
+const adminUserPanel = document.getElementById("adminUserPanel");
+const refreshAdminUsers = document.getElementById("refreshAdminUsers");
+const adminUsersBody = document.getElementById("adminUsersBody");
+const adminUsersMessage = document.getElementById("adminUsersMessage");
 
 const BASES_COLLAPSED_COUNT = 12;
 
@@ -20,9 +25,30 @@ let avatarData = null;
 let selectedBase = null;
 let selectedOverlay = null;
 let showAllBases = false;
+let isAdmin = false;
 
 function setMessage(text) {
   if (settingsMessage) settingsMessage.textContent = text;
+}
+
+function setAdminMessage(text) {
+  if (adminUsersMessage) adminUsersMessage.textContent = text;
+}
+
+function clearSessionAndRedirect() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("displayName");
+  localStorage.removeItem("username");
+  localStorage.removeItem("userEmail");
+  localStorage.removeItem("theme");
+  window.location.href = "index.html";
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString();
 }
 
 function normalizeAvatarData(data) {
@@ -254,7 +280,19 @@ async function loadSettings() {
   const rawAvatarData = await (await fetch("content/avatars.json")).json();
   avatarData = normalizeAvatarData(rawAvatarData);
   avatarData.bases = sortAvatarBasesByName(avatarData.bases || []);
-  const profile = await apiFetch("/api/user/profile");
+  const [profile, me] = await Promise.all([
+    apiFetch("/api/user/profile"),
+    apiFetch("/api/user/me")
+  ]);
+
+  const adminEmail = (window.ADMIN_EMAIL || "info@cycat.ca").toLowerCase();
+  isAdmin = (me?.email || "").toLowerCase() === adminEmail;
+  if (adminUserPanel) {
+    adminUserPanel.hidden = !isAdmin;
+  }
+  if (isAdmin) {
+    await loadAdminUsers();
+  }
 
   selectedBase = resolveBase(avatarData.bases, profile.avatarBase) || avatarData.bases[0] || null;
   const overlayCandidate = Array.isArray(profile.avatarProps) ? profile.avatarProps[0] : null;
@@ -268,6 +306,86 @@ async function loadSettings() {
   const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
   const themePreference = hasStoredTheme ? storedTheme : profile.themePreference;
   applyThemePreference(themePreference, { persist: !hasStoredTheme });
+}
+
+function renderAdminUsers(users) {
+  if (!adminUsersBody) return;
+  adminUsersBody.innerHTML = "";
+
+  users.forEach((user) => {
+    const row = document.createElement("tr");
+
+    const displayNameCell = document.createElement("td");
+    displayNameCell.textContent = user.displayName || "-";
+
+    const usernameCell = document.createElement("td");
+    usernameCell.textContent = user.username || "-";
+
+    const emailCell = document.createElement("td");
+    emailCell.textContent = user.email || "-";
+
+    const linesCell = document.createElement("td");
+    linesCell.textContent = String(user.linesCompleted ?? 0);
+
+    const tilesCell = document.createElement("td");
+    tilesCell.textContent = String(user.tilesCompleted ?? 0);
+
+    const photosCell = document.createElement("td");
+    photosCell.textContent = String(user.photoTiles ?? 0);
+
+    const createdCell = document.createElement("td");
+    createdCell.textContent = formatDate(user.createdAt);
+
+    const actionCell = document.createElement("td");
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "ghost danger small";
+    removeButton.textContent = user.canDelete ? "Remove" : (user.isAdmin ? "Admin" : "Locked");
+    removeButton.disabled = !user.canDelete;
+    removeButton.addEventListener("click", async () => {
+      const targetLabel = user.displayName || user.username || user.email || "this user";
+      const confirmed = window.prompt(`Type DELETE to remove ${targetLabel} from the system.`);
+      if (confirmed !== "DELETE") {
+        setAdminMessage("User removal cancelled.");
+        return;
+      }
+
+      setAdminMessage("");
+      removeButton.disabled = true;
+      try {
+        await apiFetch(`/api/admin/users/${user.id}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: "DELETE" })
+        });
+        setAdminMessage("User removed.");
+        await loadAdminUsers();
+      } catch (error) {
+        removeButton.disabled = !user.canDelete;
+        setAdminMessage(error.message);
+      }
+    });
+    actionCell.appendChild(removeButton);
+
+    row.append(
+      displayNameCell,
+      usernameCell,
+      emailCell,
+      linesCell,
+      tilesCell,
+      photosCell,
+      createdCell,
+      actionCell
+    );
+    adminUsersBody.appendChild(row);
+  });
+}
+
+async function loadAdminUsers() {
+  if (!isAdmin) return;
+  setAdminMessage("");
+  const data = await apiFetch("/api/admin/users");
+  renderAdminUsers(data.users || []);
 }
 
 saveSettings?.addEventListener("click", async () => {
@@ -316,15 +434,22 @@ if (deleteAccount) {
 
     try {
       await apiFetch("/api/user", { method: "DELETE" });
-      localStorage.removeItem("token");
-      localStorage.removeItem("displayName");
-      localStorage.removeItem("username");
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("theme");
-      window.location.href = "index.html";
+      clearSessionAndRedirect();
     } catch (error) {
       setMessage(error.message);
     }
+  });
+}
+
+if (logoutButton) {
+  logoutButton.addEventListener("click", () => {
+    clearSessionAndRedirect();
+  });
+}
+
+if (refreshAdminUsers) {
+  refreshAdminUsers.addEventListener("click", () => {
+    loadAdminUsers().catch((error) => setAdminMessage(error.message));
   });
 }
 

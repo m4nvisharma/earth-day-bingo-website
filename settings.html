@@ -73,10 +73,41 @@
       </section>
 
       <section class="page-card danger-card">
-        <h2>Delete account</h2>
-        <p class="lede">This permanently removes your account and all uploaded data.</p>
-        <button id="deleteAccount" class="ghost danger">Delete account</button>
+        <h2>Account actions</h2>
+        <p class="lede">Log out of this device or permanently remove your account and uploaded data.</p>
+        <div class="account-actions">
+          <button id="logoutButton" class="ghost">Log out</button>
+          <button id="deleteAccount" class="ghost danger">Delete account</button>
+        </div>
         <p id="settingsMessage" class="auth-message" aria-live="polite"></p>
+      </section>
+
+      <section id="adminUserPanel" class="page-card" hidden>
+        <div class="settings-header">
+          <div>
+            <h2>Admin: Users</h2>
+            <p class="lede">View all participants and safely remove user accounts when needed.</p>
+          </div>
+          <button id="refreshAdminUsers" class="ghost">Refresh users</button>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Lines</th>
+                <th>Tiles</th>
+                <th>Photo tiles</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersBody"></tbody>
+          </table>
+        </div>
+        <p id="adminUsersMessage" class="auth-message" aria-live="polite"></p>
       </section>
     </main>
 

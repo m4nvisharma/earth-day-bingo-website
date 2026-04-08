@@ -51,6 +51,11 @@ const adminEmail = (process.env.ADMIN_EMAIL || "info@cycat.ca").toLowerCase();
 const publicBackendUrl = (process.env.PUBLIC_BACKEND_URL || "").replace(/\/$/, "");
 const publicFrontendUrl = (process.env.PUBLIC_FRONTEND_URL || "").replace(/\/$/, "");
 
+function isAdminRequester(req) {
+  const requesterEmail = (req.user?.email || "").toLowerCase();
+  return requesterEmail === adminEmail;
+}
+
 const fallbackBingoLabels = [
   "Pick up and collect at least 15 pieces of litter",
   "Sort a day's waste into recycling, compost, and garbage correctly",
@@ -698,8 +703,7 @@ app.delete("/api/bingo/item/:id/image", authMiddleware, async (req, res) => {
 });
 
 app.get("/api/admin/leaderboard", authMiddleware, async (req, res) => {
-  const requesterEmail = (req.user?.email || "").toLowerCase();
-  if (requesterEmail !== adminEmail) {
+  if (!isAdminRequester(req)) {
     return res.status(403).json({ error: "Not authorized" });
   }
 
@@ -753,8 +757,7 @@ app.get("/api/admin/leaderboard", authMiddleware, async (req, res) => {
 });
 
 app.get("/api/admin/users/:id/board", authMiddleware, async (req, res) => {
-  const requesterEmail = (req.user?.email || "").toLowerCase();
-  if (requesterEmail !== adminEmail) {
+  if (!isAdminRequester(req)) {
     return res.status(403).json({ error: "Not authorized" });
   }
 
@@ -769,6 +772,89 @@ app.get("/api/admin/users/:id/board", authMiddleware, async (req, res) => {
   );
 
   return res.json({ user: userRows[0], items, state });
+});
+
+app.get("/api/admin/users", authMiddleware, async (req, res) => {
+  if (!isAdminRequester(req)) {
+    return res.status(403).json({ error: "Not authorized" });
+  }
+
+  const { rows: itemRows } = await query("SELECT id FROM bingo_items ORDER BY id ASC");
+  const itemIds = itemRows.map((row) => row.id);
+
+  const { rows: users } = await query(
+    "SELECT id, email, display_name, username, created_at FROM users ORDER BY created_at ASC"
+  );
+  const { rows: statuses } = await query(
+    "SELECT user_id, item_id, checked, image_url FROM user_item_status"
+  );
+
+  const statusByUser = new Map();
+  users.forEach((user) => {
+    statusByUser.set(user.id, new Map());
+  });
+  statuses.forEach((row) => {
+    if (!statusByUser.has(row.user_id)) {
+      statusByUser.set(row.user_id, new Map());
+    }
+    statusByUser.get(row.user_id).set(row.item_id, row);
+  });
+
+  const requesterId = req.user.sub;
+  const payload = users.map((user) => {
+    const statusMap = statusByUser.get(user.id) || new Map();
+    const checked = itemIds.map((itemId) => Boolean(statusMap.get(itemId)?.checked));
+    const tilesCompleted = checked.filter(Boolean).length;
+    const photoTiles = itemIds.reduce((count, itemId) => {
+      const row = statusMap.get(itemId);
+      return count + (row?.checked && row?.image_url ? 1 : 0);
+    }, 0);
+    const linesCompleted = countCompletedLines(checked, 5);
+    const isAdmin = (user.email || "").toLowerCase() === adminEmail;
+
+    return {
+      id: user.id,
+      email: user.email,
+      displayName: user.display_name,
+      username: user.username,
+      createdAt: user.created_at,
+      linesCompleted,
+      tilesCompleted,
+      photoTiles,
+      isAdmin,
+      canDelete: !isAdmin && user.id !== requesterId
+    };
+  });
+
+  return res.json({ users: payload });
+});
+
+app.delete("/api/admin/users/:id", authMiddleware, async (req, res) => {
+  if (!isAdminRequester(req)) {
+    return res.status(403).json({ error: "Not authorized" });
+  }
+
+  const userId = req.params.id;
+  const { confirm } = req.body || {};
+  if (confirm !== "DELETE") {
+    return res.status(400).json({ error: "Confirmation required" });
+  }
+  if (userId === req.user.sub) {
+    return res.status(400).json({ error: "You cannot delete your own account" });
+  }
+
+  const { rows } = await query("SELECT id, email FROM users WHERE id = $1", [userId]);
+  if (rows.length === 0) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const target = rows[0];
+  if ((target.email || "").toLowerCase() === adminEmail) {
+    return res.status(400).json({ error: "Cannot delete the primary admin account" });
+  }
+
+  await query("DELETE FROM users WHERE id = $1", [userId]);
+  return res.json({ ok: true });
 });
 
 app.use((err, req, res, next) => {

@@ -612,9 +612,23 @@ button.small {
   border: 1px solid #f3c6c6;
 }
 
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
 button.danger {
   border-color: #b94a4a;
   color: #b94a4a;
+}
+
+button.danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .certificate-wrap {
