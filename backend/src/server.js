@@ -695,7 +695,7 @@ app.delete("/api/bingo/item/:id/image", authMiddleware, async (req, res) => {
     `INSERT INTO user_item_status (user_id, item_id, checked, image_url)
      VALUES ($1, $2, FALSE, NULL)
      ON CONFLICT (user_id, item_id)
-     DO UPDATE SET image_url = NULL, updated_at = NOW()` ,
+     DO UPDATE SET checked = FALSE, image_url = NULL, updated_at = NOW()` ,
     [userId, itemId]
   );
 
