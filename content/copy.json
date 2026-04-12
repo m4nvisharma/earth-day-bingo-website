@@ -13,7 +13,7 @@
   },
   "rules": {
     "title": "Earth Day Bingo rules",
-    "intro": "Take on the challenge and make every action count. Each time you complete a row on your Earth Day Bingo board, you will earn one hour of volunteer credit, so the more you participate, the more you give back. Speed also has its rewards, and being among the first can give you a strong advantage. Every completed row increases your chances of winning, so plan strategically and see how many you can finish before time runs out.",
+    "intro": "Take on the challenge and make every action count. Each time you complete a row, column, or diagonal on your Earth Day Bingo board, you will earn one hour of volunteer credit (maximum 5), so the more you participate, the more you get back. Speed also has its rewards, and being among the first can give you a strong advantage. Every completed row, column, or diagonal increases your chances of winning, so plan strategically and see how many you can finish before time runs out.",
     "sections": [
       {
         "title": "How the game works",
@@ -30,7 +30,7 @@
           "1st place: 5 entries.",
           "2nd place: 3 entries.",
           "All additional completed rows (any participant): 1 entry each.",
-          "CYCAT member referrals add one bonus raffle entry."
+          "Referrals add one bonus raffle entry."
         ]
       },
       {
