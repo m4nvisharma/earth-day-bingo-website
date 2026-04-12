@@ -167,6 +167,7 @@ function hydrateSurveyForm(survey) {
   setValue("disability", survey.disability);
   setValue("rural", survey.rural);
   setValue("location", survey.location);
+  setValue("isUnder30", survey.isUnder30 === true ? "yes" : survey.isUnder30 === false ? "no" : "");
   setValue("discoverySource", survey.discoverySource);
   setValue("friendReferralEmail", survey.friendReferralEmail);
   setValue("cycatReferralEmail", survey.cycatReferralEmail);
@@ -228,9 +229,15 @@ surveyForm?.addEventListener("submit", async (event) => {
   setMessage("");
 
   const formData = new FormData(surveyForm);
+  const isUnder30Value = String(formData.get("isUnder30") || "").trim().toLowerCase();
   const discovery = String(formData.get("discoverySource") || "").trim();
   const friendReferralEmail = String(formData.get("friendReferralEmail") || "").trim();
   const cycatReferralEmail = String(formData.get("cycatReferralEmail") || "").trim();
+
+  if (isUnder30Value !== "yes" && isUnder30Value !== "no") {
+    setMessage("Please indicate whether you are aged below 30.");
+    return;
+  }
 
   if (discovery === "friend" && !friendReferralEmail) {
     setMessage("Friend referral email is required.");
@@ -243,6 +250,7 @@ surveyForm?.addEventListener("submit", async (event) => {
   }
 
   const payload = {
+    isUnder30: isUnder30Value === "yes",
     ageRange: formData.get("ageRange"),
     race: formData.get("race"),
     disability: formData.get("disability"),
@@ -272,12 +280,28 @@ surveyForm?.addEventListener("submit", async (event) => {
 });
 
 skipSurveyBtn?.addEventListener("click", async () => {
+  if (!surveyForm) return;
+
   setMessage("");
+  const formData = new FormData(surveyForm);
+  const isUnder30Value = String(formData.get("isUnder30") || "").trim().toLowerCase();
+
+  if (isUnder30Value !== "yes" && isUnder30Value !== "no") {
+    setMessage("Please indicate whether you are aged below 30.");
+    return;
+  }
+
   surveyContinueBtn.disabled = true;
   skipSurveyBtn.disabled = true;
 
   try {
-    await apiFetch("/api/user/survey/skip", { method: "POST" });
+    await apiFetch("/api/user/survey", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        isUnder30: isUnder30Value === "yes"
+      })
+    });
     window.location.href = "app.html";
   } catch (error) {
     setMessage(error.message);

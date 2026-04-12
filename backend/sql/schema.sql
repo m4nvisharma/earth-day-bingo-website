@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS line_completions (
 
 CREATE TABLE IF NOT EXISTS user_surveys (
   user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  is_under_30 BOOLEAN,
   age_range TEXT,
   race TEXT,
   disability TEXT,

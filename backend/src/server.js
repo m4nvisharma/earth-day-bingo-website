@@ -547,7 +547,7 @@ app.put("/api/user/consent", authMiddleware, async (req, res) => {
 app.get("/api/user/survey", authMiddleware, async (req, res) => {
   const userId = req.user.sub;
   const { rows } = await query(
-    `SELECT age_range, race, disability, rural, location, discovery_source,
+    `SELECT is_under_30, age_range, race, disability, rural, location, discovery_source,
             friend_referral_email, cycat_referral_email, other_discovery,
             completed_at, skipped_at
        FROM user_surveys WHERE user_id = $1`,
@@ -556,6 +556,7 @@ app.get("/api/user/survey", authMiddleware, async (req, res) => {
 
   if (rows.length === 0) {
     return res.json({
+      isUnder30: null,
       ageRange: null,
       race: null,
       disability: null,
@@ -576,6 +577,7 @@ app.get("/api/user/survey", authMiddleware, async (req, res) => {
     survey.discovery_source === "cycat" && Boolean(survey.cycat_referral_email) ? 1 : 0;
 
   return res.json({
+    isUnder30: survey.is_under_30,
     ageRange: survey.age_range,
     race: survey.race,
     disability: survey.disability,
@@ -595,6 +597,11 @@ app.put("/api/user/survey", authMiddleware, async (req, res) => {
   const userId = req.user.sub;
   const payload = req.body || {};
   const discoverySource = normalizeSurveySource(payload.discoverySource);
+  const isUnder30 = typeof payload.isUnder30 === "boolean" ? payload.isUnder30 : null;
+
+  if (isUnder30 === null) {
+    return res.status(400).json({ error: "Please indicate whether you are aged below 30." });
+  }
 
   const ageRange = cleanText(payload.ageRange, 80);
   const race = cleanText(payload.race, 140);
@@ -623,10 +630,11 @@ app.put("/api/user/survey", authMiddleware, async (req, res) => {
 
   await query(
     `INSERT INTO user_surveys (
-       user_id, age_range, race, disability, rural, location, discovery_source,
+       user_id, is_under_30, age_range, race, disability, rural, location, discovery_source,
        friend_referral_email, cycat_referral_email, other_discovery, completed_at, updated_at, skipped_at
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW(),NOW(),NULL)
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),NOW(),NULL)
      ON CONFLICT (user_id) DO UPDATE SET
+       is_under_30 = EXCLUDED.is_under_30,
        age_range = EXCLUDED.age_range,
        race = EXCLUDED.race,
        disability = EXCLUDED.disability,
@@ -641,6 +649,7 @@ app.put("/api/user/survey", authMiddleware, async (req, res) => {
        updated_at = NOW()`,
     [
       userId,
+      isUnder30,
       ageRange,
       race,
       disability,

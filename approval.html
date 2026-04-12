@@ -43,10 +43,25 @@
 
         <section id="surveyStep" class="approval-step" hidden>
           <p class="eyebrow">Step 2 of 2</p>
-          <h2>Optional demographic survey</h2>
-          <p class="lede">You can skip this section. Your responses help us understand who we are reaching.</p>
+          <h2>Demographic survey</h2>
+          <p class="lede">Please answer the required age eligibility question first. The remaining questions are optional.</p>
 
           <form id="surveyForm" class="auth-form approval-form">
+            <fieldset class="survey-required">
+              <legend>
+                Are you aged below 30?
+                <span class="survey-required-tag">Required</span>
+              </legend>
+              <label class="consent-check">
+                <input type="radio" name="isUnder30" value="yes" required />
+                <span>Yes, I am under 30.</span>
+              </label>
+              <label class="consent-check">
+                <input type="radio" name="isUnder30" value="no" />
+                <span>No, I am 30 or above.</span>
+              </label>
+            </fieldset>
+
             <label>
               Age range (optional)
               <select name="ageRange">
@@ -151,11 +166,11 @@
               />
             </label>
 
-            <p class="input-help referral-help">This survey is optional and does not affect your ability to participate.</p>
+            <p class="input-help referral-help">Only the age question above is required. Other responses are optional.</p>
 
             <div class="approval-actions">
               <button type="submit" id="surveyContinueBtn" class="primary">Save and continue</button>
-              <button type="button" id="skipSurveyBtn" class="ghost">Skip for now</button>
+              <button type="button" id="skipSurveyBtn" class="ghost">Continue with required answer only</button>
             </div>
           </form>
         </section>
@@ -181,6 +196,6 @@
 
     <script src="config.js?v=20260329"></script>
     <script src="theme.js"></script>
-    <script src="approval.js?v=20260411"></script>
+    <script src="approval.js?v=20260412"></script>
   </body>
 </html>

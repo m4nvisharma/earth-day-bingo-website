@@ -258,6 +258,33 @@ button:hover {
   margin-top: 0.25rem;
 }
 
+.survey-required {
+  border: 1px solid #dce9d7;
+  border-radius: 14px;
+  background: #f8fbf5;
+  padding: 0.9rem 1rem 0.65rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.survey-required legend {
+  font-weight: 600;
+  color: #2a3a31;
+  padding: 0 0.35rem;
+}
+
+.survey-required-tag {
+  margin-left: 0.45rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sage);
+}
+
+.survey-required .consent-check {
+  margin-top: 0;
+}
+
 .approval-actions {
   display: flex;
   flex-wrap: wrap;
@@ -951,6 +978,19 @@ button.danger:disabled {
 
 .theme-dark .consent-check {
   color: #d0dbd2;
+}
+
+.theme-dark .survey-required {
+  background: #161d18;
+  border-color: #2f3d34;
+}
+
+.theme-dark .survey-required legend {
+  color: #e8ede6;
+}
+
+.theme-dark .survey-required-tag {
+  color: var(--sage-dark);
 }
 
 .theme-dark label {

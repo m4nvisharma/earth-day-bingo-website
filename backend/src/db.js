@@ -74,6 +74,7 @@ export async function ensureSchema() {
   await query(`
     CREATE TABLE IF NOT EXISTS user_surveys (
       user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      is_under_30 BOOLEAN,
       age_range TEXT,
       race TEXT,
       disability TEXT,
@@ -88,6 +89,11 @@ export async function ensureSchema() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+  `);
+
+  await query(`
+    ALTER TABLE user_surveys
+      ADD COLUMN IF NOT EXISTS is_under_30 BOOLEAN;
   `);
 
   await query(`
