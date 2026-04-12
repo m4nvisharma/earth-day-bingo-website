@@ -36,7 +36,7 @@
         <div class="ticket-card">
           <p class="ticket-label">Tickets</p>
           <p class="ticket-value" id="ticketCount">0</p>
-          <p class="ticket-note">Completed lines</p>
+          <p class="ticket-note">Raffle entries (lines + referral bonus)</p>
         </div>
         <button id="logoutBtn" class="ghost">Log out</button>
       </div>
@@ -78,6 +78,11 @@
             <p class="stat-label">Most photo tiles</p>
             <p class="stat-value" id="adminTopPhotos">0</p>
           </div>
+          <div class="stat-card stat-card--storage" id="adminStorageCard" hidden>
+            <p class="stat-label">Storage usage</p>
+            <p class="stat-value" id="adminStorageUsage">Checking...</p>
+            <p class="stat-meta" id="adminStorageMeta"></p>
+          </div>
         </div>
         <div class="admin-table-wrap">
           <table class="admin-table">
@@ -94,6 +99,29 @@
             <tbody id="adminTableBody"></tbody>
           </table>
         </div>
+        <section class="admin-line-log">
+          <div class="admin-line-header">
+            <div>
+              <p class="eyebrow">Speed bonus</p>
+              <h3>Line completion order</h3>
+              <p class="lede">Rows, columns, and diagonals in the order completed.</p>
+            </div>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table admin-line-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Participant</th>
+                  <th>Email</th>
+                  <th>Line</th>
+                  <th>Completed at</th>
+                </tr>
+              </thead>
+              <tbody id="adminLineTableBody"></tbody>
+            </table>
+          </div>
+        </section>
       </section>
     </main>
 
@@ -108,6 +136,14 @@
           <button id="adminDetailClose" class="ghost">Close</button>
         </div>
         <section id="adminDetailGrid" class="admin-detail-grid"></section>
+        <section id="adminDetailLines" class="admin-detail-lines">
+          <div>
+            <h4>Line completion order</h4>
+            <p class="input-help">Rows, columns, and diagonals in the order completed.</p>
+          </div>
+          <ol id="adminDetailLineList" class="admin-line-list"></ol>
+          <p id="adminDetailLineEmpty" class="input-help" hidden>No completed lines yet.</p>
+        </section>
       </div>
     </div>
 

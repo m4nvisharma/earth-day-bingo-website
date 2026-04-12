@@ -1,6 +1,0 @@
-admin
-support
-moderator
-staff
-cycat
-glocal

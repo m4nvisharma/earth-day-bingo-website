@@ -3,24 +3,41 @@
     "title": "Photo consent and authenticity",
     "summary": "Before continuing, please confirm how your photos can be used and that your submissions are authentic.",
     "points": [
-      "Your uploaded photos may be used by CYCAT to showcase Earth Day Bingo impact.",
+      "Your uploaded photos may be used by CYCAT on social media and to showcase Earth Day Bingo impact.",
       "All submissions must be original, taken by you, and not AI-generated or sourced online.",
       "Submissions may be reviewed to verify authenticity and appropriate content."
     ],
-    "photoUseLabel": "I allow CYCAT to use my uploaded photos.",
+    "photoUseLabel": "I allow CYCAT to use my uploaded photos on social media and in program communications.",
     "authenticLabel": "I confirm my uploads are my own photos, not AI-generated, and not taken from the internet.",
     "note": "You can proceed once the countdown finishes and both checkboxes are selected."
   },
   "rules": {
     "title": "Earth Day Bingo rules",
-    "intro": "Complete eco-actions, upload proof, and collect tickets for each completed line.",
+    "intro": "Take on the challenge and make every action count. Each time you complete a row on your Earth Day Bingo board, you will earn one hour of volunteer credit, so the more you participate, the more you give back. Speed also has its rewards, and being among the first can give you a strong advantage. Every completed row increases your chances of winning, so plan strategically and see how many you can finish before time runs out.",
     "sections": [
       {
         "title": "How the game works",
         "bullets": [
           "Complete a bingo tile by doing the action and uploading a photo proof.",
-          "Each completed row, column, or diagonal counts as one raffle ticket.",
-          "You can keep completing tiles to earn more tickets."
+          "Each completed row, column, or diagonal earns one hour of volunteer credit.",
+          "Every completed row, column, or diagonal adds one raffle entry.",
+          "You can keep completing tiles to earn more entries."
+        ]
+      },
+      {
+        "title": "Bonus entries for completing a row",
+        "bullets": [
+          "1st place: 5 entries.",
+          "2nd place: 3 entries.",
+          "All additional completed rows (any participant): 1 entry each.",
+          "CYCAT member referrals add one bonus raffle entry."
+        ]
+      },
+      {
+        "title": "Prize eligibility",
+        "bullets": [
+          "Prize winners must be under 30 and reside in Canada.",
+          "Everyone is welcome to participate; participants 30 and over are not eligible for prizes."
         ]
       },
       {
@@ -42,7 +59,7 @@
       {
         "title": "Consent notice",
         "bullets": [
-          "By participating, you consent to CYCAT using submitted photos for program highlights.",
+          "By participating, you consent to CYCAT using submitted photos on social media and for program highlights.",
           "Your uploads are required for completing tiles."
         ]
       }

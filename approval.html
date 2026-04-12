@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Setup - Earth Day Bingo</title>
+    <link rel="icon" href="SVG%20Files/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="login-body">
+    <main class="auth-shell">
+      <section class="auth-panel approval-panel">
+        <div class="auth-header">
+          <div class="logo-row">
+            <img src="cycat-logo-main.jpg" alt="CYCAT" class="logo-img" />
+            <img src="glocal-logo-main.png" alt="Glocal" class="logo-img" />
+          </div>
+          <p class="eyebrow">Account setup</p>
+          <h1>One more step before bingo</h1>
+          <p class="lede">Please confirm consent, then optionally share survey details.</p>
+        </div>
+
+        <section id="consentStep" class="approval-step">
+          <p class="eyebrow">Step 1 of 2</p>
+          <h2>Photo consent and authenticity</h2>
+          <div id="consentBody" class="consent-body"></div>
+          <label class="consent-check">
+            <input type="checkbox" id="consentUsePhotos" />
+            <span id="consentUsePhotosLabel">I allow CYCAT to use my uploaded photos on social media and in program communications.</span>
+          </label>
+          <label class="consent-check">
+            <input type="checkbox" id="consentAuthentic" />
+            <span id="consentAuthenticLabel">I confirm my uploads are my own photos, not AI-generated, and not taken from the internet.</span>
+          </label>
+          <button id="consentContinueBtn" class="primary" disabled>Agree and continue</button>
+        </section>
+
+        <section id="surveyStep" class="approval-step" hidden>
+          <p class="eyebrow">Step 2 of 2</p>
+          <h2>Optional demographic survey</h2>
+          <p class="lede">You can skip this section. Your responses help us understand who we are reaching.</p>
+
+          <form id="surveyForm" class="auth-form approval-form">
+            <label>
+              Age range (optional)
+              <select name="ageRange">
+                <option value="">Prefer not to say</option>
+                <option value="under-18">Under 18</option>
+                <option value="18-24">18-24</option>
+                <option value="25-29">25-29</option>
+                <option value="30-39">30-39</option>
+                <option value="40-49">40-49</option>
+                <option value="50+">50+</option>
+              </select>
+            </label>
+
+            <label>
+              Race or ethnicity (optional)
+              <input
+                type="text"
+                name="race"
+                maxlength="140"
+                placeholder="Optional"
+                autocomplete="off"
+              />
+            </label>
+
+            <label>
+              Disability identity (optional)
+              <select name="disability">
+                <option value="">Prefer not to say</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+                <option value="prefer-not-to-say">Prefer not to say</option>
+              </select>
+            </label>
+
+            <label>
+              Do you live in a rural area? (optional)
+              <select name="rural">
+                <option value="">Prefer not to say</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+                <option value="not-sure">Not sure</option>
+              </select>
+            </label>
+
+            <label>
+              Location (city/town, province, country) (optional)
+              <input
+                type="text"
+                name="location"
+                maxlength="140"
+                placeholder="Example: Calgary, Alberta, Canada"
+                autocomplete="address-level2"
+              />
+            </label>
+
+            <label>
+              How did you hear about this opportunity? (optional)
+              <select id="discoverySource" name="discoverySource">
+                <option value="">Prefer not to say</option>
+                <option value="instagram">Instagram</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="tiktok">TikTok</option>
+                <option value="website">Website</option>
+                <option value="podcast">Podcast</option>
+                <option value="friend">Referred by a friend</option>
+                <option value="cycat">Referred by a CYCAT member</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+
+            <label id="friendReferralWrap" hidden>
+              Friend referral email
+              <input
+                type="email"
+                name="friendReferralEmail"
+                maxlength="140"
+                placeholder="friend@example.com"
+                autocomplete="email"
+              />
+            </label>
+
+            <label id="cycatReferralWrap" hidden>
+              CYCAT member referral email
+              <input
+                type="email"
+                name="cycatReferralEmail"
+                maxlength="140"
+                placeholder="member@cycat.ca"
+                autocomplete="email"
+              />
+              <span class="input-help">CYCAT referrals receive 1 extra raffle ticket when this email is provided.</span>
+            </label>
+
+            <label id="otherDiscoveryWrap" hidden>
+              Where did you find us?
+              <input
+                type="text"
+                name="otherDiscovery"
+                maxlength="140"
+                placeholder="Optional details"
+                autocomplete="off"
+              />
+            </label>
+
+            <p class="input-help referral-help">This survey is optional and does not affect your ability to participate.</p>
+
+            <div class="approval-actions">
+              <button type="submit" id="surveyContinueBtn" class="primary">Save and continue</button>
+              <button type="button" id="skipSurveyBtn" class="ghost">Skip for now</button>
+            </div>
+          </form>
+        </section>
+
+        <p id="approvalMessage" class="auth-message" aria-live="polite"></p>
+      </section>
+
+      <section class="auth-art approval-art" aria-hidden="true">
+        <div class="sun-glow"></div>
+        <div class="card-preview">
+          <div class="card-row">
+            <span>Consent keeps submissions fair and authentic</span>
+            <span>Optional survey helps us improve outreach</span>
+          </div>
+          <div class="card-row">
+            <span>CYCAT referral email unlocks +1 ticket</span>
+            <span>After setup, you go straight to your bingo board</span>
+          </div>
+        </div>
+        <p class="auth-quote">"Thanks for helping us grow Earth Day impact together."</p>
+      </section>
+    </main>
+
+    <script src="config.js?v=20260329"></script>
+    <script src="theme.js"></script>
+    <script src="approval.js"></script>
+  </body>
+</html>

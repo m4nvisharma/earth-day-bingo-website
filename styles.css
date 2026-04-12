@@ -114,11 +114,14 @@ label {
   color: #2a3a31;
 }
 
-input {
+input,
+select {
   padding: 0.75rem 0.9rem;
   border-radius: 12px;
   border: 1px solid #d6d6d6;
   font-size: 1rem;
+  font-family: inherit;
+  background: var(--white);
 }
 
 textarea {
@@ -183,6 +186,14 @@ button:hover {
   min-height: 1.5rem;
 }
 
+.auth-message[data-state="success"] {
+  color: #2e6a3f;
+}
+
+.auth-message[data-state="error"] {
+  color: var(--clay);
+}
+
 .auth-art {
   position: relative;
   padding: 2rem;
@@ -227,6 +238,42 @@ button:hover {
   margin-top: 2.5rem;
   font-style: italic;
   color: #d7e3d0;
+}
+
+.approval-panel {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.approval-step {
+  display: grid;
+  gap: 1rem;
+}
+
+.approval-step h2 {
+  font-size: 1.55rem;
+}
+
+.approval-form {
+  margin-top: 0.25rem;
+}
+
+.approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.approval-actions button {
+  min-width: 180px;
+}
+
+.referral-help {
+  margin-top: -0.2rem;
+}
+
+.approval-art .card-preview {
+  margin-top: 2.6rem;
 }
 
 .app-header {
@@ -727,6 +774,7 @@ button.danger:disabled {
 }
 
 .theme-dark input,
+.theme-dark select,
 .theme-dark textarea {
   background: #141a16;
   color: #e8ede6;
@@ -734,9 +782,14 @@ button.danger:disabled {
 }
 
 .theme-dark input:focus,
+.theme-dark select:focus,
 .theme-dark textarea:focus {
   outline: 2px solid var(--sage-dark);
   border-color: var(--sage-dark);
+}
+
+.theme-dark .auth-message[data-state="success"] {
+  color: #9fd6ab;
 }
 
 .theme-dark .avatar-option {
@@ -833,8 +886,29 @@ button.danger:disabled {
   color: var(--moss-dark);
 }
 
+.theme-dark .stat-meta {
+  color: #b8c7bc;
+}
+
 .theme-dark .admin-table tbody tr:hover {
   background: rgba(74, 109, 84, 0.1);
+}
+
+.theme-dark .admin-line-item {
+  background: #161d18;
+  border-color: #2f3d34;
+}
+
+.theme-dark .admin-line-order {
+  color: var(--moss-dark);
+}
+
+.theme-dark .admin-line-label {
+  color: #e8ede6;
+}
+
+.theme-dark .admin-line-time {
+  color: #b8c7bc;
 }
 
 .theme-dark .admin-table th,
@@ -1060,6 +1134,22 @@ button.danger:disabled {
   border: 1px solid #e0eadf;
 }
 
+.stat-meta {
+  font-size: 0.85rem;
+  color: #5b6b60;
+  margin-top: 0.35rem;
+}
+
+.stat-card--storage[data-status="warning"] {
+  border-color: #f1c56d;
+  box-shadow: inset 0 0 0 1px rgba(241, 197, 109, 0.35);
+}
+
+.stat-card--storage[data-status="critical"] {
+  border-color: #c98f7a;
+  box-shadow: inset 0 0 0 1px rgba(201, 143, 122, 0.45);
+}
+
 .stat-label {
   font-size: 0.85rem;
   color: var(--sage);
@@ -1100,6 +1190,68 @@ button.danger:disabled {
 
 .admin-table tbody tr:hover {
   background: #f3f8ee;
+}
+
+.admin-line-log {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.admin-line-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-detail-lines {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-detail-lines h4 {
+  font-family: "Fraunces", serif;
+  font-size: 1.1rem;
+}
+
+.admin-line-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-line-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid #e0eadf;
+  background: #f3f8ee;
+}
+
+.admin-line-order {
+  font-weight: 700;
+  color: var(--forest);
+  min-width: 2.5rem;
+}
+
+.admin-line-label {
+  font-weight: 600;
+  color: #1f3f2b;
+}
+
+.admin-line-time {
+  font-size: 0.85rem;
+  color: #5b6b60;
+  display: block;
+  margin-top: 0.15rem;
 }
 
 .celebration {
@@ -1282,11 +1434,19 @@ button.danger:disabled {
     padding: 1.5rem;
   }
 
+  .login-body {
+    padding: 1.5rem 1rem;
+  }
+
   .bingo-grid {
     grid-template-columns: 1fr;
   }
 
   .celebration-card {
     padding: 1.5rem;
+  }
+
+  .approval-actions button {
+    width: 100%;
   }
 }

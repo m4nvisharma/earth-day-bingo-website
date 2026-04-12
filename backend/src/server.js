@@ -56,6 +56,145 @@ function isAdminRequester(req) {
   return requesterEmail === adminEmail;
 }
 
+function parseEnvNumber(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+const hasSupabaseStorage = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+const hasS3Storage = Boolean(process.env.S3_BUCKET && process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY);
+const storageLimitMb = parseEnvNumber(process.env.STORAGE_LIMIT_MB, 1024);
+const storageWarnPercent = parseEnvNumber(process.env.STORAGE_WARN_PERCENT, 85);
+const storageCriticalPercent = parseEnvNumber(process.env.STORAGE_CRITICAL_PERCENT, 95);
+const storageAlertCooldownHours = parseEnvNumber(process.env.STORAGE_ALERT_COOLDOWN_HOURS, 24);
+const storageAlertCooldownMs = storageAlertCooldownHours * 60 * 60 * 1000;
+let lastStorageAlertAt = 0;
+let lastStorageAlertLevel = "ok";
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes)) return "unknown";
+  const gb = 1024 * 1024 * 1024;
+  const mb = 1024 * 1024;
+  if (bytes >= gb) return `${(bytes / gb).toFixed(2)} GB`;
+  return `${Math.max(1, Math.round(bytes / mb))} MB`;
+}
+
+async function getDirectorySize(dir) {
+  let entries;
+  try {
+    entries = await fs.promises.readdir(dir, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === "ENOENT") return 0;
+    throw error;
+  }
+
+  let total = 0;
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      total += await getDirectorySize(fullPath);
+      continue;
+    }
+    if (!entry.isFile()) continue;
+    const stats = await fs.promises.stat(fullPath);
+    total += stats.size || 0;
+  }
+  return total;
+}
+
+function getStorageLevel(usagePercent) {
+  if (!Number.isFinite(usagePercent)) return "unknown";
+  if (usagePercent >= storageCriticalPercent) return "critical";
+  if (usagePercent >= storageWarnPercent) return "warning";
+  return "ok";
+}
+
+async function getStorageSummary() {
+  if (hasSupabaseStorage || hasS3Storage) {
+    return {
+      source: "external",
+      usageBytes: null,
+      limitBytes: null,
+      usagePercent: null,
+      status: "external",
+      warnPercent: storageWarnPercent,
+      criticalPercent: storageCriticalPercent
+    };
+  }
+
+  const limitBytes = storageLimitMb > 0 ? storageLimitMb * 1024 * 1024 : null;
+  const fullDir = path.join(process.cwd(), uploadDir);
+  try {
+    const usageBytes = await getDirectorySize(fullDir);
+    const usagePercent = limitBytes ? Math.round((usageBytes / limitBytes) * 10) / 10 : null;
+    return {
+      source: "local",
+      usageBytes,
+      limitBytes,
+      usagePercent,
+      status: getStorageLevel(usagePercent),
+      warnPercent: storageWarnPercent,
+      criticalPercent: storageCriticalPercent
+    };
+  } catch (error) {
+    console.warn("Storage size check failed", error);
+    return {
+      source: "local",
+      usageBytes: null,
+      limitBytes,
+      usagePercent: null,
+      status: "unknown",
+      warnPercent: storageWarnPercent,
+      criticalPercent: storageCriticalPercent
+    };
+  }
+}
+
+async function trySendStorageWarning(summary, reason) {
+  if (summary.source !== "local") return;
+  if (!summary.limitBytes || !Number.isFinite(summary.usagePercent)) return;
+  if (summary.status === "ok" || summary.status === "unknown") {
+    lastStorageAlertLevel = "ok";
+    return;
+  }
+
+  const now = Date.now();
+  const shouldSend =
+    summary.status !== lastStorageAlertLevel ||
+    (storageAlertCooldownMs > 0 && now - lastStorageAlertAt >= storageAlertCooldownMs);
+  if (!shouldSend) return;
+
+  if (!canSendEmail()) {
+    console.warn("Storage warning skipped: SendGrid not configured");
+    return;
+  }
+
+  const percentText = `${summary.usagePercent.toFixed(1)}%`;
+  const usageText = formatBytes(summary.usageBytes);
+  const limitText = formatBytes(summary.limitBytes);
+  const levelLabel = summary.status === "critical" ? "critical" : "warning";
+  const subject = `Storage ${levelLabel}: ${percentText} of ${limitText} used`;
+  const html = `
+    <div style="font-family:Arial, sans-serif;color:#1b1b1b">
+      <h2 style="color:#1f3f2b">Storage ${levelLabel}</h2>
+      <p>Usage is at <strong>${percentText}</strong> (${usageText} of ${limitText}).</p>
+      <p>Reason: ${reason || "periodic check"}.</p>
+    </div>
+  `;
+  const text = `Storage ${levelLabel}: ${percentText} (${usageText} of ${limitText}). Reason: ${reason || "periodic check"}.`;
+
+  try {
+    await sendEmail({ to: adminEmail, subject, html, text });
+    lastStorageAlertAt = now;
+    lastStorageAlertLevel = summary.status;
+  } catch (error) {
+    const detail = error?.response?.body?.errors
+      ? JSON.stringify(error.response.body.errors)
+      : error.message || error;
+    console.warn("Storage warning email failed", detail);
+  }
+}
+
 const fallbackBingoLabels = [
   "Pick up and collect at least 15 pieces of litter",
   "Sort a day's waste into recycling, compost, and garbage correctly",
@@ -87,52 +226,38 @@ const fallbackBingoLabels = [
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const bingoFilePath = path.resolve(__dirname, "../../prompts/bingo_cards.txt");
-const usernameBlocklistPath = path.resolve(__dirname, "../../content/username_blocklist.txt");
 const MAX_DAILY_ACTIONS = Number(process.env.MAX_DAILY_ACTIONS || 4);
-
-const baseBlocked = [
-  "admin",
-  "support",
-  "moderator",
-  "staff",
-  "cycat",
-  "glocal",
-  "fuck",
-  "shit",
-  "bitch",
-  "asshole",
-  "cunt",
-  "dick",
-  "porn",
-  "sex"
-];
-
-function loadUsernameBlocklist() {
-  try {
-    if (!fs.existsSync(usernameBlocklistPath)) return baseBlocked;
-    const content = fs.readFileSync(usernameBlocklistPath, "utf8");
-    const extra = content
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-    return [...new Set([...baseBlocked, ...extra].map((word) => word.toLowerCase()))];
-  } catch (error) {
-    console.warn("Unable to read username blocklist; using base list.");
-    return baseBlocked;
-  }
-}
 
 function validateUsername(raw) {
   const username = String(raw || "").trim();
   if (!/^[a-zA-Z0-9]{4,}$/.test(username)) {
     return { ok: false, reason: "Username must be at least 4 characters and contain only letters and numbers." };
   }
-  const lowered = username.toLowerCase();
-  const blocklist = loadUsernameBlocklist();
-  if (blocklist.some((blocked) => blocked && lowered.includes(blocked))) {
-    return { ok: false, reason: "That username is not allowed. Please choose another." };
-  }
   return { ok: true, username };
+}
+
+function cleanText(value, maxLength = 200) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, maxLength);
+}
+
+const surveySourceOptions = new Set([
+  "instagram",
+  "linkedin",
+  "tiktok",
+  "website",
+  "podcast",
+  "friend",
+  "cycat",
+  "other",
+  "prefer-not-to-say"
+]);
+
+function normalizeSurveySource(value) {
+  const raw = typeof value === "string" ? value.trim().toLowerCase() : "";
+  return surveySourceOptions.has(raw) ? raw : null;
 }
 
 function normalizeLabel(label) {
@@ -269,6 +394,18 @@ async function trySendLineCompletionEmail(payload) {
   }
 }
 
+async function recordLineCompletions(userId, lines) {
+  if (!Array.isArray(lines) || lines.length === 0) return;
+  for (const line of lines) {
+    await query(
+      `INSERT INTO line_completions (user_id, line_key, line_label)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, line_key) DO NOTHING`,
+      [userId, line.key, line.label]
+    );
+  }
+}
+
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
 app.post("/api/auth/signup", async (req, res) => {
@@ -401,6 +538,133 @@ app.put("/api/user/consent", authMiddleware, async (req, res) => {
          consent_authentic = TRUE,
          consent_at = NOW()
      WHERE id = $1`,
+    [userId]
+  );
+
+  return res.json({ ok: true });
+});
+
+app.get("/api/user/survey", authMiddleware, async (req, res) => {
+  const userId = req.user.sub;
+  const { rows } = await query(
+    `SELECT age_range, race, disability, rural, location, discovery_source,
+            friend_referral_email, cycat_referral_email, other_discovery,
+            completed_at, skipped_at
+       FROM user_surveys WHERE user_id = $1`,
+    [userId]
+  );
+
+  if (rows.length === 0) {
+    return res.json({
+      ageRange: null,
+      race: null,
+      disability: null,
+      rural: null,
+      location: null,
+      discoverySource: null,
+      friendReferralEmail: null,
+      cycatReferralEmail: null,
+      otherDiscovery: null,
+      completedAt: null,
+      skippedAt: null,
+      referralBonus: 0
+    });
+  }
+
+  const survey = rows[0];
+  const referralBonus =
+    survey.discovery_source === "cycat" && Boolean(survey.cycat_referral_email) ? 1 : 0;
+
+  return res.json({
+    ageRange: survey.age_range,
+    race: survey.race,
+    disability: survey.disability,
+    rural: survey.rural,
+    location: survey.location,
+    discoverySource: survey.discovery_source,
+    friendReferralEmail: survey.friend_referral_email,
+    cycatReferralEmail: survey.cycat_referral_email,
+    otherDiscovery: survey.other_discovery,
+    completedAt: survey.completed_at,
+    skippedAt: survey.skipped_at,
+    referralBonus
+  });
+});
+
+app.put("/api/user/survey", authMiddleware, async (req, res) => {
+  const userId = req.user.sub;
+  const payload = req.body || {};
+  const discoverySource = normalizeSurveySource(payload.discoverySource);
+
+  const ageRange = cleanText(payload.ageRange, 80);
+  const race = cleanText(payload.race, 140);
+  const disability = cleanText(payload.disability, 140);
+  const rural = cleanText(payload.rural, 80);
+  const location = cleanText(payload.location, 140);
+  let friendReferralEmail = cleanText(payload.friendReferralEmail, 140);
+  let cycatReferralEmail = cleanText(payload.cycatReferralEmail, 140);
+  const otherDiscovery = cleanText(payload.otherDiscovery, 140);
+
+  if (discoverySource !== "friend") {
+    friendReferralEmail = null;
+  }
+  if (discoverySource !== "cycat") {
+    cycatReferralEmail = null;
+  }
+
+  if (discoverySource === "friend" && !friendReferralEmail) {
+    return res.status(400).json({ error: "Friend referral email is required." });
+  }
+  if (discoverySource === "cycat" && !cycatReferralEmail) {
+    return res.status(400).json({ error: "CYCAT referral email is required." });
+  }
+
+  const otherDetail = discoverySource === "other" ? otherDiscovery : null;
+
+  await query(
+    `INSERT INTO user_surveys (
+       user_id, age_range, race, disability, rural, location, discovery_source,
+       friend_referral_email, cycat_referral_email, other_discovery, completed_at, updated_at, skipped_at
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW(),NOW(),NULL)
+     ON CONFLICT (user_id) DO UPDATE SET
+       age_range = EXCLUDED.age_range,
+       race = EXCLUDED.race,
+       disability = EXCLUDED.disability,
+       rural = EXCLUDED.rural,
+       location = EXCLUDED.location,
+       discovery_source = EXCLUDED.discovery_source,
+       friend_referral_email = EXCLUDED.friend_referral_email,
+       cycat_referral_email = EXCLUDED.cycat_referral_email,
+       other_discovery = EXCLUDED.other_discovery,
+       completed_at = NOW(),
+       skipped_at = NULL,
+       updated_at = NOW()`,
+    [
+      userId,
+      ageRange,
+      race,
+      disability,
+      rural,
+      location,
+      discoverySource,
+      friendReferralEmail,
+      cycatReferralEmail,
+      otherDetail
+    ]
+  );
+
+  return res.json({ ok: true });
+});
+
+app.post("/api/user/survey/skip", authMiddleware, async (req, res) => {
+  const userId = req.user.sub;
+  await query(
+    `INSERT INTO user_surveys (user_id, completed_at, skipped_at, updated_at)
+     VALUES ($1, NOW(), NOW(), NOW())
+     ON CONFLICT (user_id) DO UPDATE SET
+       skipped_at = NOW(),
+       completed_at = COALESCE(user_surveys.completed_at, NOW()),
+       updated_at = NOW()`,
     [userId]
   );
 
@@ -544,6 +808,7 @@ app.put("/api/bingo/state", authMiddleware, async (req, res) => {
   const newLines = afterLines.filter((line) => !beforeLines.some((prev) => prev.key === line.key));
 
   if (newLines.length > 0) {
+    await recordLineCompletions(userId, newLines);
     const { rows: userRows } = await query("SELECT id, email, display_name FROM users WHERE id = $1", [userId]);
     const user = userRows[0];
     for (const line of newLines) {
@@ -627,6 +892,7 @@ app.post("/api/bingo/item/:id/image", authMiddleware, upload.single("image"), as
   }
 
   if (newLines.length > 0) {
+    await recordLineCompletions(userId, newLines);
     const { rows: userRows } = await query("SELECT id, email, display_name FROM users WHERE id = $1", [userId]);
     const user = userRows[0];
     for (const line of newLines) {
@@ -634,7 +900,10 @@ app.post("/api/bingo/item/:id/image", authMiddleware, upload.single("image"), as
     }
   }
 
-  return res.json({ imageUrl });
+  const storageSummary = await getStorageSummary();
+  await trySendStorageWarning(storageSummary, "image upload");
+
+  return res.json({ imageUrl, storage: storageSummary });
 });
 
 app.get("/api/leaderboard", authMiddleware, async (req, res) => {
@@ -702,6 +971,15 @@ app.delete("/api/bingo/item/:id/image", authMiddleware, async (req, res) => {
   return res.json({ ok: true });
 });
 
+app.get("/api/admin/storage", authMiddleware, async (req, res) => {
+  if (!isAdminRequester(req)) {
+    return res.status(403).json({ error: "Not authorized" });
+  }
+
+  const summary = await getStorageSummary();
+  return res.json(summary);
+});
+
 app.get("/api/admin/leaderboard", authMiddleware, async (req, res) => {
   if (!isAdminRequester(req)) {
     return res.status(403).json({ error: "Not authorized" });
@@ -756,6 +1034,27 @@ app.get("/api/admin/leaderboard", authMiddleware, async (req, res) => {
   return res.json({ users: ranked });
 });
 
+app.get("/api/admin/line-completions", authMiddleware, async (req, res) => {
+  if (!isAdminRequester(req)) {
+    return res.status(403).json({ error: "Not authorized" });
+  }
+
+  const { rows } = await query(
+    `SELECT lc.id,
+            lc.user_id AS "userId",
+            u.display_name AS "displayName",
+            u.email,
+            lc.line_key AS "lineKey",
+            lc.line_label AS "lineLabel",
+            lc.created_at AS "createdAt"
+     FROM line_completions lc
+     JOIN users u ON u.id = lc.user_id
+     ORDER BY lc.created_at ASC, lc.id ASC`
+  );
+
+  return res.json({ completions: rows });
+});
+
 app.get("/api/admin/users/:id/board", authMiddleware, async (req, res) => {
   if (!isAdminRequester(req)) {
     return res.status(403).json({ error: "Not authorized" });
@@ -770,8 +1069,17 @@ app.get("/api/admin/users/:id/board", authMiddleware, async (req, res) => {
     "SELECT item_id, checked, image_url FROM user_item_status WHERE user_id = $1",
     [userId]
   );
+  const { rows: lineCompletions } = await query(
+    `SELECT line_key AS "lineKey",
+            line_label AS "lineLabel",
+            created_at AS "createdAt"
+     FROM line_completions
+     WHERE user_id = $1
+     ORDER BY created_at ASC, id ASC`,
+    [userId]
+  );
 
-  return res.json({ user: userRows[0], items, state });
+  return res.json({ user: userRows[0], items, state, lineCompletions });
 });
 
 app.get("/api/admin/users", authMiddleware, async (req, res) => {

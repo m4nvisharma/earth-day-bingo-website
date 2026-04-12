@@ -1,5 +1,14 @@
 const API_BASE = window.API_BASE || "https://your-backend.onrender.com";
 
+const KEEP_WARM_MS = 13 * 60 * 1000;
+
+function keepWarm() {
+  fetch(`${API_BASE}/api/health`, { cache: "no-store" }).catch(() => {});
+}
+
+keepWarm();
+setInterval(keepWarm, KEEP_WARM_MS);
+
 const loginForm = document.getElementById("loginForm");
 const signupForm = document.getElementById("signupForm");
 const authMessage = document.getElementById("authMessage");
@@ -23,7 +32,7 @@ function isValidUsername(value) {
   return /^[a-zA-Z0-9]{4,}$/.test(value);
 }
 
-async function handleAuth(endpoint, payload) {
+async function handleAuth(endpoint, payload, nextPath = "app.html") {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -41,7 +50,7 @@ async function handleAuth(endpoint, payload) {
     localStorage.setItem("username", data.user.username);
   }
   localStorage.setItem("userEmail", data.user.email);
-  window.location.href = "app.html";
+  window.location.href = nextPath;
 }
 
 loginForm.addEventListener("submit", async (event) => {
@@ -52,7 +61,7 @@ loginForm.addEventListener("submit", async (event) => {
     await handleAuth("/api/auth/login", {
       email: formData.get("email"),
       password: formData.get("password")
-    });
+    }, "app.html");
   } catch (error) {
     setMessage(error.message);
   }
@@ -73,7 +82,7 @@ signupForm.addEventListener("submit", async (event) => {
       displayName: formData.get("displayName"),
       email: formData.get("email"),
       password: formData.get("password")
-    });
+    }, "approval.html");
   } catch (error) {
     setMessage(error.message);
   }

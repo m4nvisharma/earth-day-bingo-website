@@ -1,6 +1,15 @@
 const API_BASE = window.API_BASE || "https://your-backend.onrender.com";
 const token = localStorage.getItem("token");
 
+const KEEP_WARM_MS = 13 * 60 * 1000;
+
+function keepWarm() {
+  fetch(`${API_BASE}/api/health`, { cache: "no-store" }).catch(() => {});
+}
+
+keepWarm();
+setInterval(keepWarm, KEEP_WARM_MS);
+
 if (!token) {
   window.location.href = "index.html";
 }
@@ -16,6 +25,9 @@ const adminUserCount = document.getElementById("adminUserCount");
 const adminTopLines = document.getElementById("adminTopLines");
 const adminTopTiles = document.getElementById("adminTopTiles");
 const adminTopPhotos = document.getElementById("adminTopPhotos");
+const adminStorageCard = document.getElementById("adminStorageCard");
+const adminStorageUsage = document.getElementById("adminStorageUsage");
+const adminStorageMeta = document.getElementById("adminStorageMeta");
 const refreshAdminBtn = document.getElementById("refreshAdminBtn");
 const celebration = document.getElementById("celebration");
 const celebrationTitle = document.getElementById("celebrationTitle");
@@ -26,6 +38,10 @@ const adminDetailClose = document.getElementById("adminDetailClose");
 const adminDetailName = document.getElementById("adminDetailName");
 const adminDetailMeta = document.getElementById("adminDetailMeta");
 const adminDetailGrid = document.getElementById("adminDetailGrid");
+const adminDetailLines = document.getElementById("adminDetailLines");
+const adminDetailLineList = document.getElementById("adminDetailLineList");
+const adminDetailLineEmpty = document.getElementById("adminDetailLineEmpty");
+const adminLineTableBody = document.getElementById("adminLineTableBody");
 const ticketCount = document.getElementById("ticketCount");
 const consentModal = document.getElementById("consentModal");
 const consentTitle = document.getElementById("consentTitle");
@@ -44,6 +60,7 @@ let state = new Map();
 let lastLineCount = 0;
 let hasLoadedLines = false;
 let consentReadyAt = 0;
+let referralBonusTickets = 0;
 
 function applyThemePreference(theme, options = {}) {
   const mode = theme === "dark" ? "dark" : "light";
@@ -66,6 +83,39 @@ function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
   setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes)) return "Unknown";
+  const gb = 1024 * 1024 * 1024;
+  const mb = 1024 * 1024;
+  if (bytes >= gb) return `${(bytes / gb).toFixed(2)} GB`;
+  return `${Math.max(1, Math.round(bytes / mb))} MB`;
+}
+
+function renderStorageStatus(summary) {
+  if (!adminStorageCard || !adminStorageUsage || !adminStorageMeta) return;
+  if (!summary || summary.status === "external") {
+    adminStorageCard.hidden = true;
+    return;
+  }
+
+  adminStorageCard.hidden = false;
+  const usageText = formatBytes(summary.usageBytes);
+  const limitText = summary.limitBytes ? formatBytes(summary.limitBytes) : "Unknown";
+  const percentText = Number.isFinite(summary.usagePercent) ? `${summary.usagePercent.toFixed(1)}%` : "Unknown";
+  const status = summary.status || "unknown";
+
+  adminStorageUsage.textContent = `${percentText} used`;
+  adminStorageMeta.textContent = `${usageText} of ${limitText}`;
+  adminStorageCard.dataset.status = status;
+}
+
+function formatTimestamp(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString();
 }
 
 async function apiFetch(path, options = {}) {
@@ -215,7 +265,7 @@ function renderGrid() {
     bingoStatus.textContent = lineCount > 0 ? "Bingo achieved!" : "No bingo yet. Keep going.";
   }
   if (ticketCount) {
-    ticketCount.textContent = `${lineCount}`;
+    ticketCount.textContent = `${lineCount + referralBonusTickets}`;
   }
 
   const isCardComplete = completed === items.length && items.length > 0;
@@ -238,14 +288,18 @@ function renderGrid() {
 }
 
 async function loadData() {
-  const itemsData = await apiFetch("/api/bingo/items");
-  const stateData = await apiFetch("/api/bingo/state");
+  const [itemsData, stateData, surveyData] = await Promise.all([
+    apiFetch("/api/bingo/items"),
+    apiFetch("/api/bingo/state"),
+    apiFetch("/api/user/survey").catch(() => ({ referralBonus: 0 }))
+  ]);
 
   items = itemsData.items;
   state = new Map(stateData.state.map((entry) => [entry.item_id, {
     checked: entry.checked,
     imageUrl: entry.image_url
   }]));
+  referralBonusTickets = Number(surveyData?.referralBonus) === 1 ? 1 : 0;
 
   updateGreeting();
   renderGrid();
@@ -434,6 +488,42 @@ async function loadLeaderboard() {
   });
 }
 
+async function loadStorageStatus() {
+  if (!isAdmin || !adminStorageCard) return;
+  try {
+    const summary = await apiFetch("/api/admin/storage");
+    renderStorageStatus(summary);
+  } catch (error) {
+    renderStorageStatus({ status: "unknown" });
+  }
+}
+
+async function loadLineCompletions() {
+  if (!isAdmin || !adminLineTableBody) return;
+  const data = await apiFetch("/api/admin/line-completions");
+  const completions = data.completions || [];
+  adminLineTableBody.innerHTML = "";
+
+  if (completions.length === 0) {
+    const row = document.createElement("tr");
+    row.innerHTML = "<td colspan=\"5\">No completed lines yet.</td>";
+    adminLineTableBody.appendChild(row);
+    return;
+  }
+
+  completions.forEach((entry, index) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${entry.displayName}</td>
+      <td>${entry.email}</td>
+      <td>${entry.lineLabel}</td>
+      <td>${formatTimestamp(entry.createdAt)}</td>
+    `;
+    adminLineTableBody.appendChild(row);
+  });
+}
+
 function openAdminDetail() {
   if (!adminDetail) return;
   adminDetail.classList.add("show");
@@ -446,7 +536,7 @@ function closeAdminDetail() {
   adminDetail.setAttribute("aria-hidden", "true");
 }
 
-function renderAdminDetail({ user, items, state }) {
+function renderAdminDetail({ user, items, state, lineCompletions }) {
   if (!adminDetailGrid || !adminDetailName || !adminDetailMeta) return;
   const statusMap = new Map(state.map((entry) => [entry.item_id, entry]));
   adminDetailName.textContent = user.display_name;
@@ -473,6 +563,35 @@ function renderAdminDetail({ user, items, state }) {
 
     adminDetailGrid.appendChild(card);
   });
+
+  if (adminDetailLineList && adminDetailLineEmpty && adminDetailLines) {
+    const lines = Array.isArray(lineCompletions) ? lineCompletions : [];
+    adminDetailLineList.innerHTML = "";
+    adminDetailLineEmpty.hidden = lines.length > 0;
+    lines.forEach((line, index) => {
+      const li = document.createElement("li");
+      li.className = "admin-line-item";
+
+      const order = document.createElement("span");
+      order.className = "admin-line-order";
+      order.textContent = `#${index + 1}`;
+
+      const info = document.createElement("div");
+      info.className = "admin-line-info";
+
+      const label = document.createElement("span");
+      label.className = "admin-line-label";
+      label.textContent = line.lineLabel || "Line";
+
+      const time = document.createElement("span");
+      time.className = "admin-line-time";
+      time.textContent = formatTimestamp(line.createdAt);
+
+      info.append(label, time);
+      li.append(order, info);
+      adminDetailLineList.appendChild(li);
+    });
+  }
 
   openAdminDetail();
 }
@@ -511,16 +630,14 @@ if (adminDetailClose) {
 if (isAdmin && adminPanel) {
   adminPanel.hidden = false;
   refreshAdminBtn?.addEventListener("click", () => {
-    loadLeaderboard().catch((error) => showToast(error.message));
+    Promise.all([loadLeaderboard(), loadLineCompletions(), loadStorageStatus()]).catch((error) => showToast(error.message));
   });
-  loadLeaderboard().catch((error) => showToast(error.message));
+  Promise.all([loadLeaderboard(), loadLineCompletions(), loadStorageStatus()]).catch((error) => showToast(error.message));
 } else if (adminPanel) {
   adminPanel.hidden = true;
 }
 
-Promise.resolve()
-  .then(() => ensureConsent())
-  .then(() => loadData())
+Promise.all([ensureConsent(), loadData()])
   .catch((error) => {
     showToast(error.message);
   });

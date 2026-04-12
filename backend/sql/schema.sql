@@ -34,3 +34,29 @@ CREATE TABLE IF NOT EXISTS user_item_status (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (user_id, item_id)
 );
+
+CREATE TABLE IF NOT EXISTS line_completions (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  line_key TEXT NOT NULL,
+  line_label TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, line_key)
+);
+
+CREATE TABLE IF NOT EXISTS user_surveys (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  age_range TEXT,
+  race TEXT,
+  disability TEXT,
+  rural TEXT,
+  location TEXT,
+  discovery_source TEXT,
+  friend_referral_email TEXT,
+  cycat_referral_email TEXT,
+  other_discovery TEXT,
+  completed_at TIMESTAMPTZ,
+  skipped_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

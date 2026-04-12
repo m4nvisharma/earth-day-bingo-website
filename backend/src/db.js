@@ -72,6 +72,25 @@ export async function ensureSchema() {
   `);
 
   await query(`
+    CREATE TABLE IF NOT EXISTS user_surveys (
+      user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      age_range TEXT,
+      race TEXT,
+      disability TEXT,
+      rural TEXT,
+      location TEXT,
+      discovery_source TEXT,
+      friend_referral_email TEXT,
+      cycat_referral_email TEXT,
+      other_discovery TEXT,
+      completed_at TIMESTAMPTZ,
+      skipped_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await query(`
     CREATE TABLE IF NOT EXISTS password_resets (
       id UUID PRIMARY KEY,
       user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
