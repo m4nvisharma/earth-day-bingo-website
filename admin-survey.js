@@ -108,7 +108,7 @@ function renderTable(rows) {
   if (!rows.length) {
     const row = document.createElement("tr");
     const cell = document.createElement("td");
-    cell.colSpan = 15;
+    cell.colSpan = 16;
     cell.textContent = "No users match your search.";
     row.appendChild(cell);
     surveyTableBody.appendChild(row);
@@ -126,6 +126,7 @@ function renderTable(rows) {
       createStatusCell(status),
       createCell(getAgeIndicator(entry.isUnder30)),
       createCell(formatText(entry.ageRange)),
+      createCell(formatText(entry.sex)),
       createCell(formatText(entry.race)),
       createCell(formatText(entry.disability)),
       createCell(formatText(entry.sexualOrientation)),

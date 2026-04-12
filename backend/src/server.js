@@ -248,7 +248,7 @@ function normalizeEmail(value) {
   return value.trim().toLowerCase();
 }
 
-async function getCycatReferralBonusForUser(userId) {
+async function getReferralBonusForUser(userId) {
   const { rows: userRows } = await query("SELECT email FROM users WHERE id = $1", [userId]);
   if (userRows.length === 0) return 0;
 
@@ -258,11 +258,13 @@ async function getCycatReferralBonusForUser(userId) {
   const { rows } = await query(
     `SELECT COUNT(*)::int AS count
        FROM user_surveys
-      WHERE discovery_source = 'cycat'
-        AND completed_at IS NOT NULL
+      WHERE completed_at IS NOT NULL
         AND skipped_at IS NULL
         AND user_id <> $2
-        AND LOWER(TRIM(cycat_referral_email)) = $1`,
+        AND (
+          (discovery_source = 'friend' AND LOWER(TRIM(friend_referral_email)) = $1)
+          OR (discovery_source = 'cycat' AND LOWER(TRIM(cycat_referral_email)) = $1)
+        )`,
     [normalizedEmail, userId]
   );
 
@@ -572,9 +574,9 @@ app.put("/api/user/consent", authMiddleware, async (req, res) => {
 
 app.get("/api/user/survey", authMiddleware, async (req, res) => {
   const userId = req.user.sub;
-  const referralBonus = await getCycatReferralBonusForUser(userId);
+  const referralBonus = await getReferralBonusForUser(userId);
   const { rows } = await query(
-    `SELECT is_under_30, age_range, race, disability, sexual_orientation, rural, location, discovery_source,
+    `SELECT is_under_30, age_range, sex, race, disability, sexual_orientation, rural, location, discovery_source,
             friend_referral_email, cycat_referral_email, other_discovery,
             completed_at, skipped_at
        FROM user_surveys WHERE user_id = $1`,
@@ -585,6 +587,7 @@ app.get("/api/user/survey", authMiddleware, async (req, res) => {
     return res.json({
       isUnder30: null,
       ageRange: null,
+      sex: null,
       race: null,
       disability: null,
       sexualOrientation: null,
@@ -605,6 +608,7 @@ app.get("/api/user/survey", authMiddleware, async (req, res) => {
   return res.json({
     isUnder30: survey.is_under_30,
     ageRange: survey.age_range,
+    sex: survey.sex,
     race: survey.race,
     disability: survey.disability,
     sexualOrientation: survey.sexual_orientation,
@@ -631,6 +635,7 @@ app.put("/api/user/survey", authMiddleware, async (req, res) => {
   }
 
   const ageRange = cleanText(payload.ageRange, 80);
+  const sex = cleanText(payload.sex, 140);
   const race = cleanText(payload.race, 140);
   const disability = cleanText(payload.disability, 140);
   const sexualOrientation = cleanText(payload.sexualOrientation, 140);
@@ -658,12 +663,13 @@ app.put("/api/user/survey", authMiddleware, async (req, res) => {
 
   await query(
     `INSERT INTO user_surveys (
-       user_id, is_under_30, age_range, race, disability, sexual_orientation, rural, location, discovery_source,
+       user_id, is_under_30, age_range, sex, race, disability, sexual_orientation, rural, location, discovery_source,
        friend_referral_email, cycat_referral_email, other_discovery, completed_at, updated_at, skipped_at
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW(),NULL)
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,NOW(),NOW(),NULL)
      ON CONFLICT (user_id) DO UPDATE SET
        is_under_30 = EXCLUDED.is_under_30,
        age_range = EXCLUDED.age_range,
+       sex = EXCLUDED.sex,
        race = EXCLUDED.race,
        disability = EXCLUDED.disability,
        sexual_orientation = EXCLUDED.sexual_orientation,
@@ -680,6 +686,7 @@ app.put("/api/user/survey", authMiddleware, async (req, res) => {
       userId,
       isUnder30,
       ageRange,
+      sex,
       race,
       disability,
       sexualOrientation,
@@ -1107,6 +1114,7 @@ app.get("/api/admin/surveys", authMiddleware, async (req, res) => {
             u.created_at AS "joinedAt",
             s.is_under_30 AS "isUnder30",
             s.age_range AS "ageRange",
+            s.sex,
             s.race,
             s.disability,
             s.sexual_orientation AS "sexualOrientation",

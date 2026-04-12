@@ -76,6 +76,7 @@ export async function ensureSchema() {
       user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       is_under_30 BOOLEAN,
       age_range TEXT,
+      sex TEXT,
       race TEXT,
       disability TEXT,
       sexual_orientation TEXT,
@@ -95,6 +96,7 @@ export async function ensureSchema() {
   await query(`
     ALTER TABLE user_surveys
       ADD COLUMN IF NOT EXISTS is_under_30 BOOLEAN,
+      ADD COLUMN IF NOT EXISTS sex TEXT,
       ADD COLUMN IF NOT EXISTS sexual_orientation TEXT;
   `);
 

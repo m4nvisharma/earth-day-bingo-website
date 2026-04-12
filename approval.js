@@ -28,10 +28,19 @@ const surveyForm = document.getElementById("surveyForm");
 const surveyContinueBtn = document.getElementById("surveyContinueBtn");
 const discoverySource = document.getElementById("discoverySource");
 const raceSelect = document.getElementById("raceSelect");
+const sexSelect = document.getElementById("sexSelect");
 const friendReferralWrap = document.getElementById("friendReferralWrap");
 const cycatReferralWrap = document.getElementById("cycatReferralWrap");
 const otherDiscoveryWrap = document.getElementById("otherDiscoveryWrap");
+const sexOtherWrap = document.getElementById("sexOtherWrap");
 const raceOtherWrap = document.getElementById("raceOtherWrap");
+
+const SEX_PRESET_VALUES = new Set([
+  "Male",
+  "Female",
+  "Non-binary",
+  "Other"
+]);
 
 const RACE_PRESET_VALUES = new Set([
   "Indigenous (First Nations, Inuit, Metis)",
@@ -181,6 +190,20 @@ function updateRaceOtherField() {
   }
 }
 
+function updateSexOtherField() {
+  if (!surveyForm) return;
+  const sexOtherInput = surveyForm.elements.sexOther;
+  const isOther = (sexSelect?.value || "").trim() === "Other";
+
+  if (sexOtherWrap) sexOtherWrap.hidden = !isOther;
+  if (!sexOtherInput) return;
+
+  sexOtherInput.required = isOther;
+  if (!isOther) {
+    sexOtherInput.value = "";
+  }
+}
+
 function hydrateSurveyForm(survey) {
   if (!surveyForm || !survey) return;
 
@@ -191,6 +214,30 @@ function hydrateSurveyForm(survey) {
   };
 
   setValue("ageRange", survey.ageRange);
+
+  const sexValue = typeof survey.sex === "string" ? survey.sex.trim() : "";
+  if (sexSelect) {
+    const normalizedSex = sexValue.toLowerCase();
+    if (!sexValue || normalizedSex === "prefer not to say" || normalizedSex === "prefer-not-to-say") {
+      sexSelect.value = "";
+      setValue("sexOther", "");
+    } else if (SEX_PRESET_VALUES.has(sexValue)) {
+      sexSelect.value = sexValue;
+      setValue("sexOther", "");
+    } else if (normalizedSex === "male") {
+      sexSelect.value = "Male";
+      setValue("sexOther", "");
+    } else if (normalizedSex === "female") {
+      sexSelect.value = "Female";
+      setValue("sexOther", "");
+    } else if (normalizedSex === "non-binary" || normalizedSex === "nonbinary") {
+      sexSelect.value = "Non-binary";
+      setValue("sexOther", "");
+    } else {
+      sexSelect.value = "Other";
+      setValue("sexOther", sexValue);
+    }
+  }
 
   const raceValue = typeof survey.race === "string" ? survey.race.trim() : "";
   if (raceSelect) {
@@ -216,6 +263,7 @@ function hydrateSurveyForm(survey) {
   setValue("cycatReferralEmail", survey.cycatReferralEmail);
   setValue("otherDiscovery", survey.otherDiscovery);
 
+  updateSexOtherField();
   updateRaceOtherField();
   updateDiscoveryFields();
 }
@@ -267,6 +315,7 @@ consentContinueBtn?.addEventListener("click", async () => {
 });
 
 discoverySource?.addEventListener("change", updateDiscoveryFields);
+sexSelect?.addEventListener("change", updateSexOtherField);
 raceSelect?.addEventListener("change", updateRaceOtherField);
 
 surveyForm?.addEventListener("submit", async (event) => {
@@ -278,6 +327,8 @@ surveyForm?.addEventListener("submit", async (event) => {
   const discovery = String(formData.get("discoverySource") || "").trim();
   const friendReferralEmail = String(formData.get("friendReferralEmail") || "").trim();
   const cycatReferralEmail = String(formData.get("cycatReferralEmail") || "").trim();
+  const sexSelection = String(formData.get("sexSelect") || "").trim();
+  const sexOther = String(formData.get("sexOther") || "").trim();
   const raceSelection = String(formData.get("raceSelect") || "").trim();
   const raceOther = String(formData.get("raceOther") || "").trim();
 
@@ -287,7 +338,7 @@ surveyForm?.addEventListener("submit", async (event) => {
   }
 
   if (discovery === "friend" && !friendReferralEmail) {
-    setMessage("Friend referral email is required.");
+    setMessage("Please enter your referring friend's email so they receive the extra ticket.");
     return;
   }
 
@@ -296,16 +347,23 @@ surveyForm?.addEventListener("submit", async (event) => {
     return;
   }
 
+  if (sexSelection === "Other" && !sexOther) {
+    setMessage("Please share your sex in the Other field, or choose another option.");
+    return;
+  }
+
   if (raceSelection === "Other" && !raceOther) {
     setMessage("Please share your race or ethnicity in the Other field, or choose another option.");
     return;
   }
 
+  const sex = sexSelection === "Other" ? sexOther : sexSelection || null;
   const race = raceSelection === "Other" ? raceOther : raceSelection || null;
 
   const payload = {
     isUnder30: isUnder30Value === "yes",
     ageRange: formData.get("ageRange"),
+    sex,
     race,
     disability: formData.get("disability"),
     sexualOrientation: formData.get("sexualOrientation"),

@@ -77,6 +77,28 @@
             </label>
 
             <label>
+              Sex (optional)
+              <select id="sexSelect" name="sexSelect">
+                <option value="">Prefer not to say</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Non-binary">Non-binary</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+
+            <label id="sexOtherWrap" hidden>
+              Please share your sex
+              <input
+                type="text"
+                name="sexOther"
+                maxlength="140"
+                placeholder="Write your preferred description"
+                autocomplete="off"
+              />
+            </label>
+
+            <label>
               Race or ethnicity (optional)
               <select id="raceSelect" name="raceSelect">
                 <option value="">Prefer not to say</option>
@@ -175,6 +197,7 @@
                 placeholder="friend@example.com"
                 autocomplete="email"
               />
+              <span class="input-help">Enter your referring friend's email so they receive 1 extra raffle ticket.</span>
             </label>
 
             <label id="cycatReferralWrap" hidden>
@@ -219,7 +242,7 @@
             <span>Optional survey helps us improve outreach</span>
           </div>
           <div class="card-row">
-            <span>Referring CYCAT members earn +1 ticket per referral</span>
+            <span>Any successful referral adds +1 ticket for the referrer</span>
             <span>After setup, you go straight to your bingo board</span>
           </div>
         </div>
@@ -229,6 +252,6 @@
 
     <script src="config.js?v=20260329"></script>
     <script src="theme.js"></script>
-    <script src="approval.js?v=20260412"></script>
+    <script src="approval.js?v=20260412b"></script>
   </body>
 </html>
