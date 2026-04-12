@@ -72,6 +72,11 @@ async function loadRules() {
     contactText.append(".");
     contactSection.appendChild(contactText);
     rulesContent.appendChild(contactSection);
+
+    const supportNote = document.createElement("p");
+    supportNote.className = "input-help rules-support-note";
+    supportNote.textContent = "Supported by the GLOCAL Foundation of Canada";
+    rulesContent.appendChild(supportNote);
   } catch (error) {
     rulesContent.textContent = error.message;
   }

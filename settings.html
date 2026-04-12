@@ -38,9 +38,12 @@
         <div class="settings-header">
           <div>
             <h2>Profile and appearance</h2>
-            <p class="lede">Choose a main image, a transparent overlay, and a theme for your account.</p>
+            <p class="lede">Choose a main image and a theme for your account.</p>
           </div>
-          <button id="saveSettings" class="primary">Save changes</button>
+          <div class="settings-save-group">
+            <button id="saveSettings" class="primary" disabled>Save changes</button>
+            <p id="settingsStatus" class="input-help settings-status" aria-live="polite">Loading settings...</p>
+          </div>
         </div>
 
         <div class="settings-grid">
@@ -63,12 +66,6 @@
           <p class="input-help">Pick the main image that anchors your avatar.</p>
           <div id="avatarBases" class="avatar-options"></div>
           <button id="toggleMoreAvatars" type="button" class="ghost avatar-more-toggle" hidden aria-expanded="false">More avatars</button>
-        </div>
-
-        <div class="avatar-section">
-          <h3>Overlay image</h3>
-          <p class="input-help">Select one overlay that sits on top at 50% transparency.</p>
-          <div id="avatarProps" class="avatar-options"></div>
         </div>
       </section>
 

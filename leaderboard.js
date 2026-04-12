@@ -8,7 +8,24 @@ if (!token) {
 const leaderboardBody = document.getElementById("leaderboardBody");
 const leaderboardMessage = document.getElementById("leaderboardMessage");
 const refreshLeaderboard = document.getElementById("refreshLeaderboard");
+const leaderboardSearch = document.getElementById("leaderboardSearch");
+const leaderboardSort = document.getElementById("leaderboardSort");
+const leaderboardMineOnly = document.getElementById("leaderboardMineOnly");
+const leaderboardAutoRefresh = document.getElementById("leaderboardAutoRefresh");
+const leaderboardTotalPlayers = document.getElementById("leaderboardTotalPlayers");
+const leaderboardMyRank = document.getElementById("leaderboardMyRank");
+const leaderboardMyScore = document.getElementById("leaderboardMyScore");
+const leaderboardUpdatedAt = document.getElementById("leaderboardUpdatedAt");
+
+const AUTO_REFRESH_MS = 30 * 1000;
+
 let avatarCatalog = null;
+let leaderboardUsers = [];
+let currentUserId = null;
+let previousRankById = new Map();
+let autoRefreshTimer = null;
+let isLoadingLeaderboard = false;
+let hasAppliedTheme = false;
 
 function applyThemePreference(theme, options = {}) {
   const mode = theme === "dark" ? "dark" : "light";
@@ -110,6 +127,12 @@ function setMessage(text) {
   leaderboardMessage.textContent = text;
 }
 
+function updateTimestamp() {
+  if (!leaderboardUpdatedAt) return;
+  const now = new Date();
+  leaderboardUpdatedAt.textContent = `Updated ${now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+}
+
 async function apiFetch(path) {
   const response = await fetch(`${API_BASE}${path}`, {
     headers: { Authorization: `Bearer ${token}` }
@@ -122,15 +145,102 @@ async function apiFetch(path) {
   return data;
 }
 
-function renderLeaderboard(users, currentUserId) {
+function normalizeText(value) {
+  return String(value || "").toLowerCase();
+}
+
+function getTrendDisplay(user) {
+  if (typeof user.movement !== "number") {
+    return { text: "new", trend: "new" };
+  }
+  if (user.movement > 0) {
+    return { text: `+${user.movement}`, trend: "up" };
+  }
+  if (user.movement < 0) {
+    return { text: String(user.movement), trend: "down" };
+  }
+  return { text: "0", trend: "flat" };
+}
+
+function getSortedUsers(users) {
+  const sortMode = leaderboardSort?.value || "rank";
+  const sorted = [...users];
+
+  if (sortMode === "name") {
+    sorted.sort((a, b) => (a.username || "").localeCompare((b.username || ""), undefined, { sensitivity: "base" }));
+    return sorted;
+  }
+
+  if (sortMode === "lines") {
+    sorted.sort((a, b) => {
+      if (b.linesCompleted !== a.linesCompleted) return b.linesCompleted - a.linesCompleted;
+      if (b.tilesCompleted !== a.tilesCompleted) return b.tilesCompleted - a.tilesCompleted;
+      return (a.username || "").localeCompare((b.username || ""), undefined, { sensitivity: "base" });
+    });
+    return sorted;
+  }
+
+  if (sortMode === "tiles") {
+    sorted.sort((a, b) => {
+      if (b.tilesCompleted !== a.tilesCompleted) return b.tilesCompleted - a.tilesCompleted;
+      if (b.linesCompleted !== a.linesCompleted) return b.linesCompleted - a.linesCompleted;
+      return (a.username || "").localeCompare((b.username || ""), undefined, { sensitivity: "base" });
+    });
+    return sorted;
+  }
+
+  sorted.sort((a, b) => (a.serverRank || 0) - (b.serverRank || 0));
+  return sorted;
+}
+
+function getVisibleUsers() {
+  const query = normalizeText(leaderboardSearch?.value);
+  const mineOnly = Boolean(leaderboardMineOnly?.checked);
+
+  const filtered = leaderboardUsers.filter((user) => {
+    if (mineOnly && user.id !== currentUserId) return false;
+    if (!query) return true;
+    return normalizeText(user.username).includes(query);
+  });
+
+  return getSortedUsers(filtered);
+}
+
+function updateSummaryCards() {
+  if (leaderboardTotalPlayers) {
+    leaderboardTotalPlayers.textContent = String(leaderboardUsers.length);
+  }
+
+  const me = leaderboardUsers.find((user) => user.id === currentUserId);
+  if (leaderboardMyRank) {
+    leaderboardMyRank.textContent = me ? `#${me.serverRank}` : "-";
+  }
+  if (leaderboardMyScore) {
+    leaderboardMyScore.textContent = me ? `${me.linesCompleted} lines / ${me.tilesCompleted} tiles` : "-";
+  }
+}
+
+function renderLeaderboard(users) {
   if (!leaderboardBody) return;
   leaderboardBody.innerHTML = "";
+
+  if (users.length === 0) {
+    const emptyRow = document.createElement("tr");
+    const emptyCell = document.createElement("td");
+    emptyCell.colSpan = 5;
+    emptyCell.textContent = "No participants match your filters.";
+    emptyRow.appendChild(emptyCell);
+    leaderboardBody.appendChild(emptyRow);
+    return;
+  }
+
+  const sortMode = leaderboardSort?.value || "rank";
 
   users.forEach((user, index) => {
     const row = document.createElement("tr");
 
     const rankCell = document.createElement("td");
-    rankCell.textContent = String(index + 1);
+    rankCell.textContent = String(sortMode === "rank" ? user.serverRank : index + 1);
 
     const userCell = document.createElement("td");
     const userWrap = document.createElement("div");
@@ -164,13 +274,19 @@ function renderLeaderboard(users, currentUserId) {
     userWrap.appendChild(nameSpan);
     userCell.appendChild(userWrap);
 
+    const trendCell = document.createElement("td");
+    trendCell.className = "leaderboard-trend";
+    const trend = getTrendDisplay(user);
+    trendCell.textContent = trend.text;
+    trendCell.dataset.trend = trend.trend;
+
     const linesCell = document.createElement("td");
     linesCell.textContent = String(user.linesCompleted);
 
     const tilesCell = document.createElement("td");
     tilesCell.textContent = String(user.tilesCompleted);
 
-    row.append(rankCell, userCell, linesCell, tilesCell);
+    row.append(rankCell, userCell, trendCell, linesCell, tilesCell);
     if (user.id === currentUserId) {
       row.classList.add("current-user");
     }
@@ -178,30 +294,122 @@ function renderLeaderboard(users, currentUserId) {
   });
 }
 
-async function loadLeaderboard() {
-  setMessage("");
-  const me = await apiFetch("/api/user/me");
-  const storedTheme = localStorage.getItem("theme");
-  const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
-  if (!hasStoredTheme && me?.themePreference) {
-    applyThemePreference(me.themePreference);
+function applyLeaderboardView({ announce = true } = {}) {
+  const visibleUsers = getVisibleUsers();
+  renderLeaderboard(visibleUsers);
+  updateSummaryCards();
+
+  if (!announce) return;
+
+  if (!leaderboardUsers.length) {
+    setMessage("No leaderboard entries yet.");
+    return;
   }
-  if (!avatarCatalog) {
-    const raw = await (await fetch("content/avatars.json")).json();
-    avatarCatalog = normalizeAvatarData(raw);
+
+  if (visibleUsers.length !== leaderboardUsers.length) {
+    setMessage(`Showing ${visibleUsers.length} of ${leaderboardUsers.length} participants.`);
+    return;
   }
-  const data = await apiFetch("/api/leaderboard");
-  const users = data.users || [];
-  const normalized = users.map((user) => ({
-    ...user,
-    avatarBase: user.avatarBase ? user.avatarBase : null,
-    avatarProps: Array.isArray(user.avatarProps) ? user.avatarProps : []
-  }));
-  renderLeaderboard(normalized, data.currentUserId);
+
+  setMessage(`Showing ${leaderboardUsers.length} participants.`);
+}
+
+function resetAutoRefreshTimer() {
+  if (autoRefreshTimer) {
+    window.clearInterval(autoRefreshTimer);
+  }
+
+  if (!leaderboardAutoRefresh?.checked) {
+    autoRefreshTimer = null;
+    return;
+  }
+
+  autoRefreshTimer = window.setInterval(() => {
+    loadLeaderboard({ silent: true }).catch(() => {});
+  }, AUTO_REFRESH_MS);
+}
+
+async function loadLeaderboard({ silent = false } = {}) {
+  if (isLoadingLeaderboard) return;
+  isLoadingLeaderboard = true;
+  if (refreshLeaderboard) {
+    refreshLeaderboard.disabled = true;
+  }
+  if (!silent) {
+    setMessage("Refreshing leaderboard...");
+  }
+
+  try {
+    const me = await apiFetch("/api/user/me");
+    if (!hasAppliedTheme) {
+      const storedTheme = localStorage.getItem("theme");
+      const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
+      if (!hasStoredTheme && me?.themePreference) {
+        applyThemePreference(me.themePreference);
+      }
+      hasAppliedTheme = true;
+    }
+
+    if (!avatarCatalog) {
+      const raw = await (await fetch("content/avatars.json")).json();
+      avatarCatalog = normalizeAvatarData(raw);
+    }
+
+    const data = await apiFetch("/api/leaderboard");
+    currentUserId = data.currentUserId || me?.id || null;
+    const users = Array.isArray(data.users) ? data.users : [];
+
+    leaderboardUsers = users.map((user, index) => {
+      const serverRank = index + 1;
+      const previousRank = previousRankById.get(user.id);
+      return {
+        ...user,
+        avatarBase: user.avatarBase || null,
+        avatarProps: Array.isArray(user.avatarProps) ? user.avatarProps : [],
+        serverRank,
+        movement: typeof previousRank === "number" ? previousRank - serverRank : null
+      };
+    });
+
+    previousRankById = new Map(leaderboardUsers.map((user) => [user.id, user.serverRank]));
+    updateTimestamp();
+    applyLeaderboardView({ announce: !silent });
+  } catch (error) {
+    setMessage(error.message);
+  } finally {
+    isLoadingLeaderboard = false;
+    if (refreshLeaderboard) {
+      refreshLeaderboard.disabled = false;
+    }
+  }
 }
 
 refreshLeaderboard?.addEventListener("click", () => {
   loadLeaderboard().catch((error) => setMessage(error.message));
 });
 
+leaderboardSearch?.addEventListener("input", () => {
+  applyLeaderboardView({ announce: true });
+});
+
+leaderboardSort?.addEventListener("change", () => {
+  applyLeaderboardView({ announce: true });
+});
+
+leaderboardMineOnly?.addEventListener("change", () => {
+  applyLeaderboardView({ announce: true });
+});
+
+leaderboardAutoRefresh?.addEventListener("change", () => {
+  resetAutoRefreshTimer();
+  setMessage(leaderboardAutoRefresh.checked ? "Auto refresh enabled." : "Auto refresh paused.");
+});
+
+window.addEventListener("beforeunload", () => {
+  if (autoRefreshTimer) {
+    window.clearInterval(autoRefreshTimer);
+  }
+});
+
+resetAutoRefreshTimer();
 loadLeaderboard().catch((error) => setMessage(error.message));

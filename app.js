@@ -60,6 +60,9 @@ let state = new Map();
 let lastLineCount = 0;
 let hasLoadedLines = false;
 let consentReadyAt = 0;
+let cardNodesById = new Map();
+const uploadStateByItem = new Map();
+const pendingUploadFiles = new Map();
 
 function applyThemePreference(theme, options = {}) {
   const mode = theme === "dark" ? "dark" : "light";
@@ -81,7 +84,8 @@ const isAdmin = userEmail === adminEmail;
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2200);
+  window.clearTimeout(showToast._timer);
+  showToast._timer = window.setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
 function formatBytes(bytes) {
@@ -198,88 +202,50 @@ function showCelebration(newLines, totalLines) {
   }, 3600);
 }
 
-function renderGrid() {
-  grid.innerHTML = "";
-  let completed = 0;
+function getUploadState(itemId) {
+  return uploadStateByItem.get(itemId) || { phase: "idle", message: "", previewUrl: "" };
+}
 
-  items.forEach((item, index) => {
-    const status = state.get(item.id) || { checked: false, imageUrl: null };
-    if (status.checked) completed += 1;
+function revokeObjectUrl(url) {
+  if (typeof url === "string" && url.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+}
 
-    const card = document.createElement("article");
-    const isCenter = index === 12;
-    card.className = `bingo-card${status.checked ? " checked" : ""}${isCenter ? " center-tile" : ""}`;
+function clearUploadState(itemId, shouldRender = true) {
+  const previous = uploadStateByItem.get(itemId);
+  if (previous?.previewUrl) {
+    revokeObjectUrl(previous.previewUrl);
+  }
+  uploadStateByItem.delete(itemId);
+  pendingUploadFiles.delete(itemId);
+  if (shouldRender) {
+    updateCard(itemId);
+  }
+}
 
-    const title = document.createElement("p");
-    title.className = "title";
-    title.textContent = item.label;
+function setUploadState(itemId, nextState) {
+  const previous = uploadStateByItem.get(itemId);
+  if (previous?.previewUrl && previous.previewUrl !== nextState.previewUrl) {
+    revokeObjectUrl(previous.previewUrl);
+  }
+  if (nextState.phase === "idle") {
+    uploadStateByItem.delete(itemId);
+  } else {
+    uploadStateByItem.set(itemId, nextState);
+  }
+  updateCard(itemId);
+}
 
-    const controls = document.createElement("div");
-    controls.className = "controls";
-
-    const fileLabel = document.createElement("label");
-    fileLabel.className = "file-label";
-    fileLabel.textContent = status.imageUrl ? "Replace photo" : "Add photo";
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = "image/*";
-    fileInput.addEventListener("change", async () => {
-      if (fileInput.files.length === 0) return;
-      try {
-        await uploadImage(item.id, fileInput.files[0]);
-        showToast("Photo saved");
-      } catch (error) {
-        showToast(error.message);
-      }
-    });
-    fileLabel.appendChild(fileInput);
-
-    controls.append(fileLabel);
-
-    if (status.checked) {
-      const undoBtn = document.createElement("button");
-      undoBtn.type = "button";
-      undoBtn.className = "ghost small";
-      undoBtn.textContent = "Undone";
-      undoBtn.addEventListener("click", async () => {
-        try {
-          await removeImage(item.id);
-          showToast("Marked undone");
-        } catch (error) {
-          showToast(error.message);
-        }
-      });
-      controls.appendChild(undoBtn);
-    } else {
-      const note = document.createElement("p");
-      note.className = "photo-required";
-      note.textContent = "Photo required to complete.";
-      controls.appendChild(note);
-    }
-
-    card.append(title, controls);
-
-    if (isCenter) {
-      const pin = document.createElement("span");
-      pin.className = "center-pin";
-      pin.setAttribute("aria-hidden", "true");
-      pin.textContent = "";
-      card.appendChild(pin);
-    }
-
-    if (status.imageUrl) {
-      const img = document.createElement("img");
-      img.src = status.imageUrl.startsWith("http") ? status.imageUrl : `${API_BASE}${status.imageUrl}`;
-      img.alt = "Uploaded proof";
-      card.appendChild(img);
-    }
-
-    grid.appendChild(card);
-  });
+function updateBoardSummary() {
+  const completed = items.reduce((count, item) => {
+    return count + (state.get(item.id)?.checked ? 1 : 0);
+  }, 0);
 
   if (progressCount) {
     progressCount.textContent = `${completed} / ${items.length} complete`;
   }
+
   const lineCount = getLineCompletionCount();
   if (bingoStatus) {
     bingoStatus.textContent = lineCount > 0 ? "Bingo achieved!" : "No bingo yet. Keep going.";
@@ -307,6 +273,160 @@ function renderGrid() {
   hasLoadedLines = true;
 }
 
+function buildCard(item, index) {
+  const status = state.get(item.id) || { checked: false, imageUrl: null };
+  const uploadState = getUploadState(item.id);
+  const isUploading = uploadState.phase === "uploading";
+  const isCenter = index === 12;
+
+  const card = document.createElement("article");
+  card.className = `bingo-card${status.checked ? " checked" : ""}${isCenter ? " center-tile" : ""}`;
+  if (isUploading) {
+    card.classList.add("is-uploading");
+  }
+
+  const title = document.createElement("p");
+  title.className = "title";
+  title.textContent = item.label;
+
+  const controls = document.createElement("div");
+  controls.className = "controls";
+
+  const fileLabel = document.createElement("label");
+  fileLabel.className = "file-label";
+  fileLabel.textContent = isUploading ? "Uploading..." : (status.imageUrl ? "Replace photo" : "Add photo");
+  if (isUploading) {
+    fileLabel.classList.add("is-busy");
+  }
+
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "image/*";
+  fileInput.disabled = isUploading;
+  fileInput.addEventListener("change", async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    try {
+      await uploadImage(item.id, file);
+      showToast("Photo saved");
+    } catch (error) {
+      showToast(error.message);
+    }
+  });
+  fileLabel.appendChild(fileInput);
+  controls.append(fileLabel);
+
+  if (status.checked) {
+    const undoBtn = document.createElement("button");
+    undoBtn.type = "button";
+    undoBtn.className = "ghost small";
+    undoBtn.textContent = "Undone";
+    undoBtn.disabled = isUploading;
+    undoBtn.addEventListener("click", async () => {
+      try {
+        await removeImage(item.id);
+        showToast("Marked undone");
+      } catch (error) {
+        showToast(error.message);
+      }
+    });
+    controls.appendChild(undoBtn);
+  } else if (!isUploading) {
+    const note = document.createElement("p");
+    note.className = "photo-required";
+    note.textContent = "Photo required to complete.";
+    controls.appendChild(note);
+  }
+
+  if (uploadState.phase === "uploading" || uploadState.phase === "error") {
+    const uploadMeta = document.createElement("div");
+    uploadMeta.className = "upload-meta";
+
+    const uploadStatus = document.createElement("p");
+    uploadStatus.className = `upload-status ${uploadState.phase}`;
+    uploadStatus.textContent = uploadState.message || (uploadState.phase === "uploading" ? "Uploading photo..." : "Upload failed");
+    uploadMeta.appendChild(uploadStatus);
+
+    if (uploadState.phase === "error" && pendingUploadFiles.has(item.id)) {
+      const retryBtn = document.createElement("button");
+      retryBtn.type = "button";
+      retryBtn.className = "ghost small upload-retry";
+      retryBtn.textContent = "Retry";
+      retryBtn.addEventListener("click", async () => {
+        const retryFile = pendingUploadFiles.get(item.id);
+        if (!retryFile) return;
+        try {
+          await uploadImage(item.id, retryFile);
+          showToast("Photo saved");
+        } catch (error) {
+          showToast(error.message);
+        }
+      });
+      uploadMeta.appendChild(retryBtn);
+    }
+
+    controls.appendChild(uploadMeta);
+  }
+
+  card.append(title, controls);
+
+  if (isCenter) {
+    const pin = document.createElement("span");
+    pin.className = "center-pin";
+    pin.setAttribute("aria-hidden", "true");
+    pin.textContent = "";
+    card.appendChild(pin);
+  }
+
+  const imageSrc = uploadState.previewUrl || (status.imageUrl ? (status.imageUrl.startsWith("http") ? status.imageUrl : `${API_BASE}${status.imageUrl}`) : "");
+  if (imageSrc) {
+    const img = document.createElement("img");
+    img.src = imageSrc;
+    img.alt = uploadState.previewUrl ? "Photo preview" : "Uploaded proof";
+    if (uploadState.previewUrl) {
+      img.classList.add("preview-pending");
+    }
+    card.appendChild(img);
+  }
+
+  return card;
+}
+
+function renderGrid() {
+  grid.innerHTML = "";
+  cardNodesById = new Map();
+
+  items.forEach((item, index) => {
+    const card = buildCard(item, index);
+    cardNodesById.set(item.id, card);
+    grid.appendChild(card);
+  });
+
+  updateBoardSummary();
+}
+
+function updateCard(itemId) {
+  const itemIndex = items.findIndex((item) => item.id === itemId);
+  if (itemIndex === -1 || !grid) return;
+
+  const replacement = buildCard(items[itemIndex], itemIndex);
+  const current = cardNodesById.get(itemId);
+
+  if (current && current.parentNode === grid) {
+    grid.replaceChild(replacement, current);
+  } else {
+    const anchor = grid.children[itemIndex];
+    if (anchor) {
+      grid.insertBefore(replacement, anchor);
+    } else {
+      grid.appendChild(replacement);
+    }
+  }
+
+  cardNodesById.set(itemId, replacement);
+  updateBoardSummary();
+}
+
 async function loadData() {
   const [itemsData, stateData] = await Promise.all([
     apiFetch("/api/bingo/items"),
@@ -331,10 +451,10 @@ async function updateChecked(itemId, checked) {
   });
 
   state.set(itemId, { ...state.get(itemId), checked });
-  renderGrid();
+  updateCard(itemId);
 }
 
-async function uploadImage(itemId, file) {
+async function uploadImageRequest(itemId, file) {
   const formData = new FormData();
   formData.append("image", file);
 
@@ -349,11 +469,50 @@ async function uploadImage(itemId, file) {
     throw new Error(data.error || "Upload failed");
   }
 
-  state.set(itemId, { ...state.get(itemId), imageUrl: data.imageUrl, checked: true });
-  renderGrid();
+  return data;
+}
+
+async function uploadImage(itemId, file) {
+  if (!file) return;
+  if (!String(file.type || "").startsWith("image/")) {
+    throw new Error("Please choose an image file.");
+  }
+
+  const currentUpload = getUploadState(itemId);
+  if (currentUpload.phase === "uploading") {
+    return;
+  }
+
+  pendingUploadFiles.set(itemId, file);
+  const previewUrl = URL.createObjectURL(file);
+  setUploadState(itemId, {
+    phase: "uploading",
+    message: `Uploading ${file.name}...`,
+    previewUrl
+  });
+
+  try {
+    const data = await uploadImageRequest(itemId, file);
+    state.set(itemId, { ...state.get(itemId), imageUrl: data.imageUrl, checked: true });
+    clearUploadState(itemId, false);
+    updateCard(itemId);
+    return data;
+  } catch (error) {
+    const active = getUploadState(itemId);
+    setUploadState(itemId, {
+      phase: "error",
+      message: error.message || "Upload failed",
+      previewUrl: active.previewUrl || previewUrl
+    });
+    throw error;
+  }
 }
 
 async function removeImage(itemId) {
+  if (getUploadState(itemId).phase === "uploading") {
+    throw new Error("Please wait for the upload to finish.");
+  }
+
   const response = await fetch(`${API_BASE}/api/bingo/item/${itemId}/image`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` }
@@ -365,7 +524,8 @@ async function removeImage(itemId) {
   }
 
   state.set(itemId, { ...state.get(itemId), imageUrl: null, checked: false });
-  renderGrid();
+  clearUploadState(itemId, false);
+  updateCard(itemId);
 }
 
 async function loadConsentCopy() {

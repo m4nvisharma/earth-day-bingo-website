@@ -14,18 +14,25 @@ const saveSettings = document.getElementById("saveSettings");
 const logoutButton = document.getElementById("logoutButton");
 const deleteAccount = document.getElementById("deleteAccount");
 const settingsMessage = document.getElementById("settingsMessage");
+const settingsStatus = document.getElementById("settingsStatus");
 const adminUserPanel = document.getElementById("adminUserPanel");
 const refreshAdminUsers = document.getElementById("refreshAdminUsers");
 const adminUsersBody = document.getElementById("adminUsersBody");
 const adminUsersMessage = document.getElementById("adminUsersMessage");
 
 const BASES_COLLAPSED_COUNT = 12;
+const AUTOSAVE_DELAY_MS = 1400;
 
 let avatarData = null;
 let selectedBase = null;
 let selectedOverlay = null;
 let showAllBases = false;
 let isAdmin = false;
+let baselineSettings = null;
+let settingsReady = false;
+let isSavingSettings = false;
+let autosaveTimer = null;
+let pendingSave = false;
 
 function setMessage(text) {
   if (settingsMessage) settingsMessage.textContent = text;
@@ -35,7 +42,18 @@ function setAdminMessage(text) {
   if (adminUsersMessage) adminUsersMessage.textContent = text;
 }
 
+function setSettingsStatus(text, state) {
+  if (!settingsStatus) return;
+  settingsStatus.textContent = text;
+  if (state) {
+    settingsStatus.dataset.state = state;
+  } else {
+    delete settingsStatus.dataset.state;
+  }
+}
+
 function clearSessionAndRedirect() {
+  window.clearTimeout(autosaveTimer);
   localStorage.removeItem("token");
   localStorage.removeItem("displayName");
   localStorage.removeItem("username");
@@ -204,6 +222,112 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
+function buildSettingsPayload() {
+  return {
+    avatarBase: selectedBase?.id || null,
+    avatarProps: selectedOverlay ? [selectedOverlay] : [],
+    themePreference: darkModeToggle?.checked ? "dark" : "light"
+  };
+}
+
+function isSamePayload(left, right) {
+  if (!left || !right) return false;
+  const leftOverlay = Array.isArray(left.avatarProps) ? left.avatarProps[0] || null : null;
+  const rightOverlay = Array.isArray(right.avatarProps) ? right.avatarProps[0] || null : null;
+  return left.avatarBase === right.avatarBase
+    && leftOverlay === rightOverlay
+    && left.themePreference === right.themePreference;
+}
+
+function hasPendingSettingsChanges() {
+  if (!settingsReady || !baselineSettings) return false;
+  return !isSamePayload(buildSettingsPayload(), baselineSettings);
+}
+
+function updateSaveButtonState() {
+  if (!saveSettings) return;
+  const dirty = hasPendingSettingsChanges();
+  saveSettings.disabled = !settingsReady || isSavingSettings || !dirty;
+  saveSettings.textContent = isSavingSettings ? "Saving..." : (dirty ? "Save changes" : "Saved");
+}
+
+function queueAutosave() {
+  if (!settingsReady) return;
+  window.clearTimeout(autosaveTimer);
+  if (!hasPendingSettingsChanges()) return;
+  autosaveTimer = window.setTimeout(() => {
+    persistSettings("auto").catch(() => {});
+  }, AUTOSAVE_DELAY_MS);
+}
+
+function onSettingsChanged() {
+  if (!settingsReady) return;
+  if (hasPendingSettingsChanges()) {
+    setSettingsStatus("Unsaved changes. Autosaving shortly...", "dirty");
+    queueAutosave();
+  } else {
+    window.clearTimeout(autosaveTimer);
+    setSettingsStatus("All changes saved.", "saved");
+  }
+  updateSaveButtonState();
+}
+
+async function persistSettings(source = "manual") {
+  if (!settingsReady) return false;
+  if (isSavingSettings) {
+    pendingSave = true;
+    return false;
+  }
+
+  const payload = buildSettingsPayload();
+  if (isSamePayload(payload, baselineSettings)) {
+    if (source === "manual") {
+      setMessage("No changes to save.");
+    }
+    setSettingsStatus("All changes saved.", "saved");
+    updateSaveButtonState();
+    return false;
+  }
+
+  isSavingSettings = true;
+  setSettingsStatus(source === "auto" ? "Autosaving changes..." : "Saving changes...", "saving");
+  if (source === "manual") {
+    setMessage("");
+  }
+  updateSaveButtonState();
+
+  try {
+    await apiFetch("/api/user/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    baselineSettings = {
+      avatarBase: payload.avatarBase,
+      avatarProps: [...payload.avatarProps],
+      themePreference: payload.themePreference
+    };
+    applyThemePreference(payload.themePreference);
+    setSettingsStatus(source === "auto" ? "Changes autosaved." : "Settings saved.", "saved");
+    if (source === "manual") {
+      setMessage("Settings saved.");
+    }
+    return true;
+  } catch (error) {
+    setSettingsStatus(`Save failed: ${error.message}`, "error");
+    setMessage(error.message);
+    throw error;
+  } finally {
+    isSavingSettings = false;
+    updateSaveButtonState();
+    if (pendingSave) {
+      pendingSave = false;
+      queueAutosave();
+    }
+  }
+}
+
 function renderPreview() {
   if (!avatarPreview) return;
   avatarPreview.innerHTML = "";
@@ -253,6 +377,7 @@ function renderOptions(container, items, selectionType) {
       }
       updateSelectedStates();
       renderPreview();
+      onSettingsChanged();
     });
 
     container.appendChild(button);
@@ -277,6 +402,10 @@ function updateSelectedStates() {
 }
 
 async function loadSettings() {
+  settingsReady = false;
+  setSettingsStatus("Loading settings...", "saving");
+  updateSaveButtonState();
+
   const rawAvatarData = await (await fetch("content/avatars.json")).json();
   avatarData = normalizeAvatarData(rawAvatarData);
   avatarData.bases = sortAvatarBasesByName(avatarData.bases || []);
@@ -306,6 +435,15 @@ async function loadSettings() {
   const hasStoredTheme = storedTheme === "dark" || storedTheme === "light";
   const themePreference = hasStoredTheme ? storedTheme : profile.themePreference;
   applyThemePreference(themePreference, { persist: !hasStoredTheme });
+
+  baselineSettings = {
+    avatarBase: selectedBase?.id || null,
+    avatarProps: selectedOverlay ? [selectedOverlay] : [],
+    themePreference: darkModeToggle?.checked ? "dark" : "light"
+  };
+  settingsReady = true;
+  setSettingsStatus("All changes saved.", "saved");
+  updateSaveButtonState();
 }
 
 function renderAdminUsers(users) {
@@ -388,32 +526,14 @@ async function loadAdminUsers() {
   renderAdminUsers(data.users || []);
 }
 
-saveSettings?.addEventListener("click", async () => {
-  setMessage("");
-  try {
-    const themePreference = darkModeToggle?.checked ? "dark" : "light";
-    const payload = {
-      avatarBase: selectedBase?.id || null,
-      avatarProps: selectedOverlay ? [selectedOverlay] : [],
-      themePreference
-    };
-
-    await apiFetch("/api/user/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    applyThemePreference(themePreference);
-    setMessage("Settings saved.");
-  } catch (error) {
-    setMessage(error.message);
-  }
+saveSettings?.addEventListener("click", () => {
+  persistSettings("manual").catch(() => {});
 });
 
 if (darkModeToggle) {
   darkModeToggle.addEventListener("change", () => {
     applyThemePreference(darkModeToggle.checked ? "dark" : "light");
+    onSettingsChanged();
   });
 }
 
@@ -452,5 +572,11 @@ if (refreshAdminUsers) {
     loadAdminUsers().catch((error) => setAdminMessage(error.message));
   });
 }
+
+window.addEventListener("beforeunload", (event) => {
+  if (!settingsReady || isSavingSettings || !hasPendingSettingsChanges()) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
 
 loadSettings().catch((error) => setMessage(error.message));

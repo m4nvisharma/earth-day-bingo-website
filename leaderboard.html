@@ -40,14 +40,57 @@
             <h2>Rankings</h2>
             <p class="lede">Usernames ranked by lines completed.</p>
           </div>
-          <button id="refreshLeaderboard" class="ghost">Refresh</button>
+          <div class="leaderboard-actions">
+            <label class="leaderboard-autorefresh">
+              <input type="checkbox" id="leaderboardAutoRefresh" checked />
+              <span>Auto refresh</span>
+            </label>
+            <button id="refreshLeaderboard" class="ghost" type="button">Refresh</button>
+          </div>
         </div>
+
+        <div class="leaderboard-tools">
+          <label>
+            Search username
+            <input id="leaderboardSearch" type="search" placeholder="Find a participant" />
+          </label>
+          <label>
+            Sort by
+            <select id="leaderboardSort">
+              <option value="rank">Official rank</option>
+              <option value="lines">Lines completed</option>
+              <option value="tiles">Tiles completed</option>
+              <option value="name">Username (A-Z)</option>
+            </select>
+          </label>
+          <label class="leaderboard-mine-toggle">
+            <input id="leaderboardMineOnly" type="checkbox" />
+            <span>Show only me</span>
+          </label>
+        </div>
+
+        <div class="admin-stats leaderboard-stats">
+          <div class="stat-card">
+            <p class="stat-label">Participants</p>
+            <p id="leaderboardTotalPlayers" class="stat-value">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Your rank</p>
+            <p id="leaderboardMyRank" class="stat-value">-</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Your score</p>
+            <p id="leaderboardMyScore" class="stat-value">-</p>
+          </div>
+        </div>
+
         <div class="leaderboard-table-wrap">
           <table class="leaderboard-table">
             <thead>
               <tr>
                 <th>Rank</th>
                 <th>Username</th>
+                <th>Trend</th>
                 <th>Lines</th>
                 <th>Tiles</th>
               </tr>
@@ -55,6 +98,7 @@
             <tbody id="leaderboardBody"></tbody>
           </table>
         </div>
+        <p id="leaderboardUpdatedAt" class="input-help leaderboard-updated"></p>
         <p id="leaderboardMessage" class="auth-message" aria-live="polite"></p>
       </section>
     </main>
