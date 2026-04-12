@@ -78,6 +78,7 @@ export async function ensureSchema() {
       age_range TEXT,
       race TEXT,
       disability TEXT,
+      sexual_orientation TEXT,
       rural TEXT,
       location TEXT,
       discovery_source TEXT,
@@ -93,7 +94,8 @@ export async function ensureSchema() {
 
   await query(`
     ALTER TABLE user_surveys
-      ADD COLUMN IF NOT EXISTS is_under_30 BOOLEAN;
+      ADD COLUMN IF NOT EXISTS is_under_30 BOOLEAN,
+      ADD COLUMN IF NOT EXISTS sexual_orientation TEXT;
   `);
 
   await query(`

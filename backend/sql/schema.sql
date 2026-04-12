@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS user_surveys (
   age_range TEXT,
   race TEXT,
   disability TEXT,
+  sexual_orientation TEXT,
   rural TEXT,
   location TEXT,
   discovery_source TEXT,

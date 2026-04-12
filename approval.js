@@ -26,11 +26,25 @@ const consentContinueBtn = document.getElementById("consentContinueBtn");
 
 const surveyForm = document.getElementById("surveyForm");
 const surveyContinueBtn = document.getElementById("surveyContinueBtn");
-const skipSurveyBtn = document.getElementById("skipSurveyBtn");
 const discoverySource = document.getElementById("discoverySource");
+const raceSelect = document.getElementById("raceSelect");
 const friendReferralWrap = document.getElementById("friendReferralWrap");
 const cycatReferralWrap = document.getElementById("cycatReferralWrap");
 const otherDiscoveryWrap = document.getElementById("otherDiscoveryWrap");
+const raceOtherWrap = document.getElementById("raceOtherWrap");
+
+const RACE_PRESET_VALUES = new Set([
+  "Indigenous (First Nations, Inuit, Metis)",
+  "Black",
+  "East Asian",
+  "South Asian",
+  "Southeast Asian",
+  "Middle Eastern or North African (MENA)",
+  "Latinx or Hispanic",
+  "White",
+  "Mixed or multiple backgrounds",
+  "Other"
+]);
 
 function setMessage(text, type = "error") {
   if (!approvalMessage) return;
@@ -153,6 +167,20 @@ function updateDiscoveryFields() {
   }
 }
 
+function updateRaceOtherField() {
+  if (!surveyForm) return;
+  const raceOtherInput = surveyForm.elements.raceOther;
+  const isOther = (raceSelect?.value || "").trim() === "Other";
+
+  if (raceOtherWrap) raceOtherWrap.hidden = !isOther;
+  if (!raceOtherInput) return;
+
+  raceOtherInput.required = isOther;
+  if (!isOther) {
+    raceOtherInput.value = "";
+  }
+}
+
 function hydrateSurveyForm(survey) {
   if (!surveyForm || !survey) return;
 
@@ -163,8 +191,23 @@ function hydrateSurveyForm(survey) {
   };
 
   setValue("ageRange", survey.ageRange);
-  setValue("race", survey.race);
+
+  const raceValue = typeof survey.race === "string" ? survey.race.trim() : "";
+  if (raceSelect) {
+    if (!raceValue) {
+      raceSelect.value = "";
+      setValue("raceOther", "");
+    } else if (RACE_PRESET_VALUES.has(raceValue)) {
+      raceSelect.value = raceValue;
+      setValue("raceOther", "");
+    } else {
+      raceSelect.value = "Other";
+      setValue("raceOther", raceValue);
+    }
+  }
+
   setValue("disability", survey.disability);
+  setValue("sexualOrientation", survey.sexualOrientation);
   setValue("rural", survey.rural);
   setValue("location", survey.location);
   setValue("isUnder30", survey.isUnder30 === true ? "yes" : survey.isUnder30 === false ? "no" : "");
@@ -173,6 +216,7 @@ function hydrateSurveyForm(survey) {
   setValue("cycatReferralEmail", survey.cycatReferralEmail);
   setValue("otherDiscovery", survey.otherDiscovery);
 
+  updateRaceOtherField();
   updateDiscoveryFields();
 }
 
@@ -223,6 +267,7 @@ consentContinueBtn?.addEventListener("click", async () => {
 });
 
 discoverySource?.addEventListener("change", updateDiscoveryFields);
+raceSelect?.addEventListener("change", updateRaceOtherField);
 
 surveyForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -233,6 +278,8 @@ surveyForm?.addEventListener("submit", async (event) => {
   const discovery = String(formData.get("discoverySource") || "").trim();
   const friendReferralEmail = String(formData.get("friendReferralEmail") || "").trim();
   const cycatReferralEmail = String(formData.get("cycatReferralEmail") || "").trim();
+  const raceSelection = String(formData.get("raceSelect") || "").trim();
+  const raceOther = String(formData.get("raceOther") || "").trim();
 
   if (isUnder30Value !== "yes" && isUnder30Value !== "no") {
     setMessage("Please indicate whether you are aged below 30.");
@@ -249,11 +296,19 @@ surveyForm?.addEventListener("submit", async (event) => {
     return;
   }
 
+  if (raceSelection === "Other" && !raceOther) {
+    setMessage("Please share your race or ethnicity in the Other field, or choose another option.");
+    return;
+  }
+
+  const race = raceSelection === "Other" ? raceOther : raceSelection || null;
+
   const payload = {
     isUnder30: isUnder30Value === "yes",
     ageRange: formData.get("ageRange"),
-    race: formData.get("race"),
+    race,
     disability: formData.get("disability"),
+    sexualOrientation: formData.get("sexualOrientation"),
     rural: formData.get("rural"),
     location: formData.get("location"),
     discoverySource: discovery || null,
@@ -263,7 +318,6 @@ surveyForm?.addEventListener("submit", async (event) => {
   };
 
   surveyContinueBtn.disabled = true;
-  skipSurveyBtn.disabled = true;
 
   try {
     await apiFetch("/api/user/survey", {
@@ -275,38 +329,6 @@ surveyForm?.addEventListener("submit", async (event) => {
   } catch (error) {
     setMessage(error.message);
     surveyContinueBtn.disabled = false;
-    skipSurveyBtn.disabled = false;
-  }
-});
-
-skipSurveyBtn?.addEventListener("click", async () => {
-  if (!surveyForm) return;
-
-  setMessage("");
-  const formData = new FormData(surveyForm);
-  const isUnder30Value = String(formData.get("isUnder30") || "").trim().toLowerCase();
-
-  if (isUnder30Value !== "yes" && isUnder30Value !== "no") {
-    setMessage("Please indicate whether you are aged below 30.");
-    return;
-  }
-
-  surveyContinueBtn.disabled = true;
-  skipSurveyBtn.disabled = true;
-
-  try {
-    await apiFetch("/api/user/survey", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        isUnder30: isUnder30Value === "yes"
-      })
-    });
-    window.location.href = "app.html";
-  } catch (error) {
-    setMessage(error.message);
-    surveyContinueBtn.disabled = false;
-    skipSurveyBtn.disabled = false;
   }
 });
 

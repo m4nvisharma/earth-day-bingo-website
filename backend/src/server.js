@@ -547,7 +547,7 @@ app.put("/api/user/consent", authMiddleware, async (req, res) => {
 app.get("/api/user/survey", authMiddleware, async (req, res) => {
   const userId = req.user.sub;
   const { rows } = await query(
-    `SELECT is_under_30, age_range, race, disability, rural, location, discovery_source,
+    `SELECT is_under_30, age_range, race, disability, sexual_orientation, rural, location, discovery_source,
             friend_referral_email, cycat_referral_email, other_discovery,
             completed_at, skipped_at
        FROM user_surveys WHERE user_id = $1`,
@@ -560,6 +560,7 @@ app.get("/api/user/survey", authMiddleware, async (req, res) => {
       ageRange: null,
       race: null,
       disability: null,
+      sexualOrientation: null,
       rural: null,
       location: null,
       discoverySource: null,
@@ -581,6 +582,7 @@ app.get("/api/user/survey", authMiddleware, async (req, res) => {
     ageRange: survey.age_range,
     race: survey.race,
     disability: survey.disability,
+    sexualOrientation: survey.sexual_orientation,
     rural: survey.rural,
     location: survey.location,
     discoverySource: survey.discovery_source,
@@ -606,6 +608,7 @@ app.put("/api/user/survey", authMiddleware, async (req, res) => {
   const ageRange = cleanText(payload.ageRange, 80);
   const race = cleanText(payload.race, 140);
   const disability = cleanText(payload.disability, 140);
+  const sexualOrientation = cleanText(payload.sexualOrientation, 140);
   const rural = cleanText(payload.rural, 80);
   const location = cleanText(payload.location, 140);
   let friendReferralEmail = cleanText(payload.friendReferralEmail, 140);
@@ -630,14 +633,15 @@ app.put("/api/user/survey", authMiddleware, async (req, res) => {
 
   await query(
     `INSERT INTO user_surveys (
-       user_id, is_under_30, age_range, race, disability, rural, location, discovery_source,
+       user_id, is_under_30, age_range, race, disability, sexual_orientation, rural, location, discovery_source,
        friend_referral_email, cycat_referral_email, other_discovery, completed_at, updated_at, skipped_at
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),NOW(),NULL)
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW(),NULL)
      ON CONFLICT (user_id) DO UPDATE SET
        is_under_30 = EXCLUDED.is_under_30,
        age_range = EXCLUDED.age_range,
        race = EXCLUDED.race,
        disability = EXCLUDED.disability,
+       sexual_orientation = EXCLUDED.sexual_orientation,
        rural = EXCLUDED.rural,
        location = EXCLUDED.location,
        discovery_source = EXCLUDED.discovery_source,
@@ -653,6 +657,7 @@ app.put("/api/user/survey", authMiddleware, async (req, res) => {
       ageRange,
       race,
       disability,
+      sexualOrientation,
       rural,
       location,
       discoverySource,
@@ -1079,6 +1084,7 @@ app.get("/api/admin/surveys", authMiddleware, async (req, res) => {
             s.age_range AS "ageRange",
             s.race,
             s.disability,
+            s.sexual_orientation AS "sexualOrientation",
             s.rural,
             s.location,
             s.discovery_source AS "discoverySource",

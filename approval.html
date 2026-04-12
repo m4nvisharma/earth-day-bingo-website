@@ -45,6 +45,7 @@
           <p class="eyebrow">Step 2 of 2</p>
           <h2>Demographic survey</h2>
           <p class="lede">Please answer the required age eligibility question first. The remaining questions are optional.</p>
+          <p class="input-help survey-motivation">When you share your demographic story, you help us make sure Earth Day awareness reaches every community fairly and without bias. Your voice helps us learn, reduce blind spots, and build a more inclusive future together.</p>
 
           <form id="surveyForm" class="auth-form approval-form">
             <fieldset class="survey-required">
@@ -77,11 +78,28 @@
 
             <label>
               Race or ethnicity (optional)
+              <select id="raceSelect" name="raceSelect">
+                <option value="">Prefer not to say</option>
+                <option value="Indigenous (First Nations, Inuit, Metis)">Indigenous (First Nations, Inuit, Metis)</option>
+                <option value="Black">Black</option>
+                <option value="East Asian">East Asian</option>
+                <option value="South Asian">South Asian</option>
+                <option value="Southeast Asian">Southeast Asian</option>
+                <option value="Middle Eastern or North African (MENA)">Middle Eastern or North African (MENA)</option>
+                <option value="Latinx or Hispanic">Latinx or Hispanic</option>
+                <option value="White">White</option>
+                <option value="Mixed or multiple backgrounds">Mixed or multiple backgrounds</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+
+            <label id="raceOtherWrap" hidden>
+              Please share your race or ethnicity
               <input
                 type="text"
-                name="race"
+                name="raceOther"
                 maxlength="140"
-                placeholder="Optional"
+                placeholder="Write your preferred description"
                 autocomplete="off"
               />
             </label>
@@ -92,7 +110,23 @@
                 <option value="">Prefer not to say</option>
                 <option value="yes">Yes</option>
                 <option value="no">No</option>
-                <option value="prefer-not-to-say">Prefer not to say</option>
+              </select>
+            </label>
+
+            <label>
+              Sexual orientation (optional)
+              <select name="sexualOrientation">
+                <option value="">Prefer not to say</option>
+                <option value="Straight / Heterosexual">Straight / Heterosexual</option>
+                <option value="Lesbian">Lesbian</option>
+                <option value="Gay">Gay</option>
+                <option value="Bisexual">Bisexual</option>
+                <option value="Pansexual">Pansexual</option>
+                <option value="Asexual">Asexual</option>
+                <option value="Queer">Queer</option>
+                <option value="Questioning">Questioning</option>
+                <option value="LGBTQIA+">LGBTQIA+</option>
+                <option value="Other">Other</option>
               </select>
             </label>
 
@@ -170,7 +204,6 @@
 
             <div class="approval-actions">
               <button type="submit" id="surveyContinueBtn" class="primary">Save and continue</button>
-              <button type="button" id="skipSurveyBtn" class="ghost">Continue with required answer only</button>
             </div>
           </form>
         </section>
