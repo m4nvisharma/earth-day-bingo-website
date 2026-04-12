@@ -389,7 +389,6 @@ function updateSelectedStates() {
 
 async function loadSettings() {
   settingsReady = false;
-  setSettingsStatus("Loading settings...", "saving");
   updateSaveButtonState();
 
   const rawAvatarData = await (await fetch("content/avatars.json")).json();
