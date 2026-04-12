@@ -60,7 +60,6 @@ let state = new Map();
 let lastLineCount = 0;
 let hasLoadedLines = false;
 let consentReadyAt = 0;
-let referralBonusTickets = 0;
 
 function applyThemePreference(theme, options = {}) {
   const mode = theme === "dark" ? "dark" : "light";
@@ -286,7 +285,7 @@ function renderGrid() {
     bingoStatus.textContent = lineCount > 0 ? "Bingo achieved!" : "No bingo yet. Keep going.";
   }
   if (ticketCount) {
-    ticketCount.textContent = `${lineCount + referralBonusTickets}`;
+    ticketCount.textContent = `${lineCount}`;
   }
 
   const isCardComplete = completed === items.length && items.length > 0;
@@ -309,10 +308,9 @@ function renderGrid() {
 }
 
 async function loadData() {
-  const [itemsData, stateData, surveyData] = await Promise.all([
+  const [itemsData, stateData] = await Promise.all([
     apiFetch("/api/bingo/items"),
-    apiFetch("/api/bingo/state"),
-    apiFetch("/api/user/survey").catch(() => ({ referralBonus: 0 }))
+    apiFetch("/api/bingo/state")
   ]);
 
   items = itemsData.items;
@@ -320,10 +318,6 @@ async function loadData() {
     checked: entry.checked,
     imageUrl: entry.image_url
   }]));
-  const referralBonus = Number(surveyData?.referralBonus);
-  referralBonusTickets = Number.isFinite(referralBonus) && referralBonus > 0
-    ? Math.floor(referralBonus)
-    : 0;
 
   updateGreeting();
   renderGrid();

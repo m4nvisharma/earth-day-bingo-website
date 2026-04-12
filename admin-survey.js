@@ -64,8 +64,8 @@ function getSurveyStatus(entry) {
 }
 
 function getAgeIndicator(isUnder30) {
-  if (isUnder30 === true) return "Below 30";
-  if (isUnder30 === false) return "30 and above";
+  if (isUnder30 === true) return "30 and below";
+  if (isUnder30 === false) return "Above 30";
   return "No answer";
 }
 

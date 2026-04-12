@@ -627,7 +627,7 @@ app.put("/api/user/survey", authMiddleware, async (req, res) => {
   const isUnder30 = typeof payload.isUnder30 === "boolean" ? payload.isUnder30 : null;
 
   if (isUnder30 === null) {
-    return res.status(400).json({ error: "Please indicate whether you are aged below 30." });
+    return res.status(400).json({ error: "Please indicate whether you are aged 30 or below." });
   }
 
   const ageRange = cleanText(payload.ageRange, 80);

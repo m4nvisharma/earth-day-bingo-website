@@ -282,7 +282,7 @@ surveyForm?.addEventListener("submit", async (event) => {
   const raceOther = String(formData.get("raceOther") || "").trim();
 
   if (isUnder30Value !== "yes" && isUnder30Value !== "no") {
-    setMessage("Please indicate whether you are aged below 30.");
+    setMessage("Please indicate whether you are aged 30 or below.");
     return;
   }
 

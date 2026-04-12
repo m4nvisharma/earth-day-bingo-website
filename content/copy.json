@@ -19,7 +19,7 @@
         "title": "How the game works",
         "bullets": [
           "Complete a bingo tile by doing the action and uploading a photo proof.",
-          "Each completed row, column, or diagonal earns one hour of volunteer credit.",
+          "Each completed row, column, or diagonal earns one hour of volunteer credit (maximum 5).",
           "Every completed row, column, or diagonal adds one raffle entry.",
           "You can keep completing tiles to earn more entries."
         ]
@@ -30,14 +30,15 @@
           "1st place: 5 entries.",
           "2nd place: 3 entries.",
           "All additional completed rows (any participant): 1 entry each.",
-          "Each successful CYCAT referral adds one bonus raffle entry to the referring member."
+          "Each successful CYCAT referral adds one bonus raffle entry to the referring member.",
+          "Bonus entries (including first-completion and referral bonuses) are added at the end of the challenge, so the live ticket counter does not include them during gameplay."
         ]
       },
       {
         "title": "Prize eligibility",
         "bullets": [
-          "Prize winners must be under 30 and reside in Canada.",
-          "Everyone is welcome to participate; participants 30 and over are not eligible for prizes."
+          "Prize winners must be 30 or below and reside in Canada.",
+          "Everyone is welcome to participate; participants over 30 are not eligible for prizes."
         ]
       },
       {
