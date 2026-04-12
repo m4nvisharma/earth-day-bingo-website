@@ -925,6 +925,20 @@ button.danger:disabled {
   border-color: #2f3d34;
 }
 
+.theme-dark .rules-intro-card {
+  background: #1a2219;
+  border-color: #2f3d34;
+  box-shadow: none;
+}
+
+.theme-dark .rules-section p {
+  color: #d0dbd2;
+}
+
+.theme-dark .rules-section a {
+  color: var(--moss-dark);
+}
+
 .theme-dark .consent-card,
 .theme-dark .admin-detail-card {
   background: #1a2219;
@@ -969,8 +983,28 @@ button.danger:disabled {
   background: rgba(74, 109, 84, 0.3);
 }
 
+.rules-content {
+  width: min(860px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 1.2rem;
+}
+
+.rules-intro-card {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.95), rgba(236, 245, 232, 0.88));
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid #dce9d7;
+  box-shadow: 0 12px 32px rgba(31, 63, 43, 0.08);
+}
+
 .rules-content h2 {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.45rem;
+}
+
+.rules-intro-card .lede {
+  max-width: 68ch;
+  margin-top: 0.65rem;
 }
 
 .rules-section {
@@ -978,12 +1012,21 @@ button.danger:disabled {
   padding: 1.5rem;
   border-radius: 18px;
   border: 1px solid #e6efe3;
-  margin-top: 1.2rem;
 }
 
 .rules-section h3 {
   font-family: "Fraunces", serif;
   margin-bottom: 0.65rem;
+}
+
+.rules-section p {
+  color: #2b3a31;
+  line-height: 1.6;
+}
+
+.rules-section a {
+  color: var(--forest);
+  font-weight: 600;
 }
 
 .rules-section ul {
