@@ -947,6 +947,26 @@ button.danger:disabled {
   color: var(--sage-dark);
 }
 
+.theme-dark .survey-pill {
+  background: rgba(140, 168, 153, 0.18);
+  color: #d2e1d7;
+}
+
+.theme-dark .survey-pill[data-status="submitted"] {
+  background: rgba(125, 181, 126, 0.2);
+  color: #bfe4c2;
+}
+
+.theme-dark .survey-pill[data-status="required"] {
+  background: rgba(212, 168, 86, 0.2);
+  color: #f0d398;
+}
+
+.theme-dark .survey-pill[data-status="pending"] {
+  background: rgba(201, 143, 122, 0.2);
+  color: #e9b6a7;
+}
+
 .theme-dark .rules-section {
   background: #1a2219;
   border-color: #2f3d34;
@@ -1204,6 +1224,20 @@ button.danger:disabled {
   gap: 1.5rem;
 }
 
+.admin-link-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-page-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .admin-stats {
   display: grid;
   gap: 1rem;
@@ -1253,6 +1287,52 @@ button.danger:disabled {
   width: 100%;
   border-collapse: collapse;
   min-width: 620px;
+}
+
+.admin-survey-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.admin-survey-search {
+  min-width: min(320px, 100%);
+}
+
+.admin-survey-search input {
+  min-width: 280px;
+}
+
+.admin-survey-table {
+  min-width: 1520px;
+}
+
+.survey-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: #edf4e9;
+  color: #264734;
+}
+
+.survey-pill[data-status="submitted"] {
+  background: #dff0d5;
+  color: #1f5b33;
+}
+
+.survey-pill[data-status="required"] {
+  background: #fff0cf;
+  color: #704f0b;
+}
+
+.survey-pill[data-status="pending"] {
+  background: #f2e1dc;
+  color: #7a3f33;
 }
 
 .admin-table th,
@@ -1490,6 +1570,19 @@ button.danger:disabled {
   .admin-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .admin-survey-controls {
+    width: 100%;
+  }
+
+  .admin-survey-search {
+    width: 100%;
+  }
+
+  .admin-survey-search input {
+    width: 100%;
+    min-width: 0;
   }
 }
 

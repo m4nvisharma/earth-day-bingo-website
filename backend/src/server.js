@@ -1064,6 +1064,41 @@ app.get("/api/admin/line-completions", authMiddleware, async (req, res) => {
   return res.json({ completions: rows });
 });
 
+app.get("/api/admin/surveys", authMiddleware, async (req, res) => {
+  if (!isAdminRequester(req)) {
+    return res.status(403).json({ error: "Not authorized" });
+  }
+
+  const { rows } = await query(
+    `SELECT u.id,
+            u.display_name AS "displayName",
+            u.username,
+            u.email,
+            u.created_at AS "joinedAt",
+            s.is_under_30 AS "isUnder30",
+            s.age_range AS "ageRange",
+            s.race,
+            s.disability,
+            s.rural,
+            s.location,
+            s.discovery_source AS "discoverySource",
+            s.friend_referral_email AS "friendReferralEmail",
+            s.cycat_referral_email AS "cycatReferralEmail",
+            s.other_discovery AS "otherDiscovery",
+            s.completed_at AS "completedAt",
+            s.skipped_at AS "skippedAt",
+            s.updated_at AS "updatedAt"
+     FROM users u
+     LEFT JOIN user_surveys s ON s.user_id = u.id
+     ORDER BY
+       CASE WHEN s.completed_at IS NULL THEN 1 ELSE 0 END,
+       s.completed_at DESC NULLS LAST,
+       u.created_at ASC`
+  );
+
+  return res.json({ users: rows });
+});
+
 app.get("/api/admin/users/:id/board", authMiddleware, async (req, res) => {
   if (!isAdminRequester(req)) {
     return res.status(403).json({ error: "Not authorized" });

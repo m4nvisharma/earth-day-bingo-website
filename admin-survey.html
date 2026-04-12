@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Survey Answers - Earth Day Bingo</title>
+    <link rel="icon" href="SVG%20Files/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="app-body page-body">
+    <header class="app-header">
+      <div class="brand-block">
+        <div class="logo-row">
+          <img src="cycat-logo-main.jpg" alt="CYCAT" class="logo-img" />
+          <img src="glocal-logo-main.png" alt="Glocal" class="logo-img" />
+        </div>
+        <p class="eyebrow">Admin view</p>
+        <h1>Demographic survey answers</h1>
+        <p class="lede">Review survey responses by participant.</p>
+      </div>
+      <nav class="app-nav" aria-label="Primary">
+        <a href="rules.html">Rules</a>
+        <a href="app.html">Bingo Board</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="settings.html">Settings</a>
+        <a href="contact.html">Contact</a>
+        <a href="admin-survey.html" class="active">Survey Admin</a>
+      </nav>
+      <div class="header-actions">
+        <button id="logoutBtn" class="ghost" type="button">Log out</button>
+      </div>
+    </header>
+
+    <main class="page-main">
+      <section class="page-card">
+        <div class="settings-header">
+          <div>
+            <h2>Participant responses</h2>
+            <p class="lede">See the required age answer and optional demographics submitted by each user.</p>
+          </div>
+          <div class="admin-survey-controls">
+            <label class="admin-survey-search">
+              Search user
+              <input type="search" id="surveySearch" placeholder="Name, username, or email" />
+            </label>
+            <button id="refreshSurveyBtn" class="ghost" type="button">Refresh</button>
+          </div>
+        </div>
+
+        <div class="admin-stats admin-survey-stats">
+          <div class="stat-card">
+            <p class="stat-label">Participants</p>
+            <p class="stat-value" id="surveyTotalUsers">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Submitted full survey</p>
+            <p class="stat-value" id="surveySubmittedUsers">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Required answer only</p>
+            <p class="stat-value" id="surveyRequiredOnlyUsers">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">No response yet</p>
+            <p class="stat-value" id="surveyPendingUsers">0</p>
+          </div>
+        </div>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table admin-survey-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Age indicator</th>
+                <th>Age range</th>
+                <th>Race</th>
+                <th>Disability</th>
+                <th>Rural</th>
+                <th>Location</th>
+                <th>Discovery source</th>
+                <th>Referral email</th>
+                <th>Other discovery detail</th>
+                <th>Completed at</th>
+              </tr>
+            </thead>
+            <tbody id="surveyTableBody"></tbody>
+          </table>
+        </div>
+
+        <p id="surveyMessage" class="auth-message" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="config.js?v=20260329"></script>
+    <script src="theme.js"></script>
+    <script src="admin-survey.js"></script>
+  </body>
+</html>
