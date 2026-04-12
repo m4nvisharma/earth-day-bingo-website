@@ -134,6 +134,27 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
+function isSurveyCompleted(survey) {
+  return Boolean(survey && (survey.completedAt || survey.skippedAt));
+}
+
+async function ensureApprovalFlow() {
+  const [me, survey] = await Promise.all([
+    apiFetch("/api/user/me"),
+    apiFetch("/api/user/survey").catch(() => null)
+  ]);
+
+  const hasConsent = Boolean(me?.consentPhotoUse && me?.consentAuthentic);
+  const surveyDone = isSurveyCompleted(survey);
+
+  if (!hasConsent || !surveyDone) {
+    window.location.href = "approval.html";
+    return false;
+  }
+
+  return true;
+}
+
 function getLineCompletionCount() {
   if (items.length < 25) return 0;
   const checked = items.map((item) => Boolean(state.get(item.id)?.checked));
@@ -637,7 +658,11 @@ if (isAdmin && adminPanel) {
   adminPanel.hidden = true;
 }
 
-Promise.all([ensureConsent(), loadData()])
+ensureApprovalFlow()
+  .then((ready) => {
+    if (!ready) return null;
+    return Promise.all([ensureConsent(), loadData()]);
+  })
   .catch((error) => {
     showToast(error.message);
   });
