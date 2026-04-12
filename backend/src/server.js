@@ -243,6 +243,32 @@ function cleanText(value, maxLength = 200) {
   return trimmed.slice(0, maxLength);
 }
 
+function normalizeEmail(value) {
+  if (typeof value !== "string") return "";
+  return value.trim().toLowerCase();
+}
+
+async function getCycatReferralBonusForUser(userId) {
+  const { rows: userRows } = await query("SELECT email FROM users WHERE id = $1", [userId]);
+  if (userRows.length === 0) return 0;
+
+  const normalizedEmail = normalizeEmail(userRows[0].email);
+  if (!normalizedEmail) return 0;
+
+  const { rows } = await query(
+    `SELECT COUNT(*)::int AS count
+       FROM user_surveys
+      WHERE discovery_source = 'cycat'
+        AND completed_at IS NOT NULL
+        AND skipped_at IS NULL
+        AND user_id <> $2
+        AND LOWER(TRIM(cycat_referral_email)) = $1`,
+    [normalizedEmail, userId]
+  );
+
+  return rows[0]?.count || 0;
+}
+
 const surveySourceOptions = new Set([
   "instagram",
   "linkedin",
@@ -546,6 +572,7 @@ app.put("/api/user/consent", authMiddleware, async (req, res) => {
 
 app.get("/api/user/survey", authMiddleware, async (req, res) => {
   const userId = req.user.sub;
+  const referralBonus = await getCycatReferralBonusForUser(userId);
   const { rows } = await query(
     `SELECT is_under_30, age_range, race, disability, sexual_orientation, rural, location, discovery_source,
             friend_referral_email, cycat_referral_email, other_discovery,
@@ -569,13 +596,11 @@ app.get("/api/user/survey", authMiddleware, async (req, res) => {
       otherDiscovery: null,
       completedAt: null,
       skippedAt: null,
-      referralBonus: 0
+      referralBonus
     });
   }
 
   const survey = rows[0];
-  const referralBonus =
-    survey.discovery_source === "cycat" && Boolean(survey.cycat_referral_email) ? 1 : 0;
 
   return res.json({
     isUnder30: survey.is_under_30,

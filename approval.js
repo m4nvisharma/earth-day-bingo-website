@@ -292,7 +292,7 @@ surveyForm?.addEventListener("submit", async (event) => {
   }
 
   if (discovery === "cycat" && !cycatReferralEmail) {
-    setMessage("CYCAT referral email is required for the extra ticket.");
+    setMessage("Please enter the referring CYCAT member email so they receive the extra ticket.");
     return;
   }
 

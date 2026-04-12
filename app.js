@@ -320,7 +320,10 @@ async function loadData() {
     checked: entry.checked,
     imageUrl: entry.image_url
   }]));
-  referralBonusTickets = Number(surveyData?.referralBonus) === 1 ? 1 : 0;
+  const referralBonus = Number(surveyData?.referralBonus);
+  referralBonusTickets = Number.isFinite(referralBonus) && referralBonus > 0
+    ? Math.floor(referralBonus)
+    : 0;
 
   updateGreeting();
   renderGrid();
